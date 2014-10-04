@@ -1,33 +1,30 @@
 #define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 #include "strings.h"
-#include "scanner.h"
 
-	FILE *file;		// soubor globalne
 
 
 
 int main(){
 
-	
+	string test;
+	char testChar = 'a';
+	strStringInit(&test);
 
-	if ((file = fopen("source.txt", "r")) == NULL){
-		printf("Could not open file!\n");
-		return 1;
+	for (int x = 0; x < 10; x++){
+		strAddCharToString(&test, testChar);
+		testChar++;
 	}
 
+	printf("%s\n", test.str);
 
-	tInitToken();
-	tGetToken();
+	strEmptyString(&test);
 
-	printf("%s\n", token.content);
-	printf("%d\n", token.length);
-
-	tFreeToken();
+	printf("%s\n", test.str);
 	
-	fclose(file);
-	
-	
-
+	strFreeString(&test);
 	
 	return 0;
 }
