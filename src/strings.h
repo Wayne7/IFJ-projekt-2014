@@ -1,3 +1,6 @@
+#ifndef _STRINGS
+#define _STRINGS
+
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
@@ -17,5 +20,7 @@ typedef struct {
 
 int strStringInit(string * str);
 void strFreeString(string * str);
-int strDddCharToString(string * str, char c);
+int strAddCharToString(string * str, char c);
 void strEmptyString(string *str);
+
+#endif

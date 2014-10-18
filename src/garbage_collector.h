@@ -1,5 +1,9 @@
+#ifndef _GARBAGE_COLLECTOR
+#define _GARBAGE_COLLECTOR
+
 #include <stdio.h>
 #include <malloc.h>
+
 
 
 // Polozka garbage collectoru
@@ -13,7 +17,7 @@ typedef struct garbageItem{
 // Seznam polozek garbage collectoru
 typedef struct garbageList{
 
-	gItem *first;					// Ukazatel na prvni polozku seznamu
+	struct garbageItem *first;		// Ukazatel na prvni polozku seznamu
 }gList;
 
 // Deklarace funkci pro praci s garbage collectorem
@@ -25,3 +29,5 @@ void gFree();
 
 void updateList(void *memory, int size, void *memoryToFree);				// pomocne funkce
 void cancelPtr(void *memoryToFree);
+
+#endif

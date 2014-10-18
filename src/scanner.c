@@ -1,4 +1,5 @@
 #include "scanner.h"
+#include "garbage_collector.h"
 
 /*
 *	Hruby navrh jak by to mohlo fungovat, parser(zatim volam z mainu) vola scanner a dostava tokeny, ktere se budou ukladat do tabulky
@@ -9,7 +10,7 @@ tToken token;			// global
 
 
 void tInitToken(){
-	token.content = (char*) malloc(sizeof(char));
+	token.content = (char*) gMalloc(sizeof(char));
 	token.content[0] = '\0';
 	token.row = 0;				// potreba zavest globalni promennou, ktera bude urcovat na kterem jsme radku!
 	token.state = T_START;		// zatim stav tokenu nefunkcni
@@ -17,7 +18,7 @@ void tInitToken(){
 }
 
 void tExtendToken(int c){
-	token.content = realloc(token.content, (char*) (sizeof(char) * (token.length + 2)));
+	token.content = (char*) gReAlloc(token.content,(sizeof(char) * (token.length + 2)));
 	token.content[token.length] = c;
 	token.length++;
 	token.content[token.length] = '\0';

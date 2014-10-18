@@ -27,18 +27,19 @@ int main(){
 	
 	fclose(file);*/
 	
-	char *pole = NULL;
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-	pole = gMalloc(5);
+	gListInit();
+	string test;
+	strStringInit(&test);
+	strAddCharToString(&test, 'a');
+	strAddCharToString(&test, 'h');
+	strAddCharToString(&test, 'o');
+	strAddCharToString(&test, 'j');
 
-	char *policko = gMalloc(50);
-	pole = gReAlloc(pole, 100);
+	printf("%s\n", test.str);
+	strEmptyString(&test);
+	printf("%s\n", test.str);
 
 	gFree();
-	
 	
 	return 0;
 }

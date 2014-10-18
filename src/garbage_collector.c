@@ -47,7 +47,6 @@ void gFree(){						// Uvolneni alokovane pameti
 		list.first = tmp->ptr;
 		free(tmp->data);
 		free(tmp);
-		printf("lel\n");
 	}
 }
 
@@ -62,12 +61,9 @@ void *gReAlloc(void *memory, int size){			// Realokace pameti
 	else{
 		tmp = realloc(memory, size);
 
-		printf("%d\n", memory);
-
 		if (tmp != memory){						// Pokud ukazatel na nove prirazanou pamet je ruzny od puvodniho, musime smazat starou polozku v seznamu a pridat novou
 			updateList(tmp, size, memory);
 		}
-		printf("%d\n", tmp);
 			return tmp;
 	}
 
@@ -101,31 +97,38 @@ void updateList(void *memory, int size, void *memoryToFree){
 void cancelPtr(void *memoryToFree){				// Uvolnim polozku v seznamu
 
 	gItem tmp = list.first;
-	gItem tmp2;
+	gItem tmp2 = list.first;	//pomocna promenna
 
 	while (tmp != NULL){
-		if (tmp->ptr != NULL){
-			if (tmp->ptr->data == memoryToFree){
-				tmp2 = tmp->ptr;
+
+		if (tmp2->data == memoryToFree){	//pokud je to prvni prvek v seznamu
+			if (tmp->ptr == NULL){			//a zaroven jediny => zruseni seznamu
+				list.first = NULL;
+				tmp->ptr = NULL;
+				tmp->data = NULL;
+				free(tmp);
+				return;
+			}
+			else{
+				list.first = tmp->ptr;	//a za nim nasleduji dalsi prvky => posunuti ukazatele
+				tmp->ptr = NULL;
+				tmp->data = NULL;
+				free(tmp);
+				return;
+			}
+		}
+		else if (tmp->ptr != NULL){
+			if (tmp->ptr->data == memoryToFree){	// pokud hledana polozka neni prvnim prvkem seznamu
+				tmp2 = tmp->ptr;					// koukam na dalsi prvek seznamu zda je to on a uvolnim jej
 				tmp->ptr = tmp2->ptr;
 				tmp2->ptr = NULL;
 				tmp2->data = NULL;
 				free(tmp2);
-				printf("Hello kittyyyy\n");
 				return;
 			}
-			else if ((tmp->ptr == NULL) && (tmp != NULL)){	// pokud je to jediny prvek v seznamu, zrusim seznam a uvolnim prvek
-				if (tmp->data == memoryToFree){
-					list.first = NULL;
-					tmp->ptr = NULL;
-					tmp->data = NULL;
-					free(tmp);
-					printf("Hello kitty\n");
-					return;
-				}
-			}
-		tmp = tmp->ptr;
+			
 		}
+		tmp = tmp->ptr;
 	}
 
 }

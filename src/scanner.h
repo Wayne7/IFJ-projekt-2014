@@ -1,3 +1,6 @@
+#ifndef _SCANNER
+#define _SCANNER
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -27,9 +30,10 @@ typedef struct{
 }tToken;
 
 extern FILE *file;
-extern tToken token;
 
 tToken tGetToken();
 void tInitToken();
 void tFreeToken();
 void tExtentToken(int c);
+
+#endif

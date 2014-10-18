@@ -1,7 +1,8 @@
 #include "strings.h"
+#include "garbage_collector.h"
 
 int strStringInit(string *str){
-	if ((str->str = (char*) malloc(sizeof(char) * STRING_ALLOC_SIZE)) == NULL){
+	if ((str->str = (char*) gMalloc(sizeof(char) * STRING_ALLOC_SIZE)) == NULL){
 		return STRING_ERROR;
 	}
 	str->str[0] = '\0';
@@ -12,7 +13,7 @@ int strStringInit(string *str){
 
 int strAddCharToString(string *str, char c){
 	if (str->stringLength >= str->allocatedMemory - 1){
-		if ((str->str = (char*)realloc(str->str, str->allocatedMemory + STRING_ALLOC_SIZE)) == NULL){
+		if ((str->str = (char*)gReAlloc(str->str, str->allocatedMemory + STRING_ALLOC_SIZE)) == NULL){
 			return STRING_ERROR;
 		}
 		str->allocatedMemory += STRING_ALLOC_SIZE;
@@ -23,9 +24,6 @@ int strAddCharToString(string *str, char c){
 		return STRING_SUCCESS;
 }
 
-void strFreeString(string *str){
-	free(str->str);
-}
 
 void strEmptyString(string *str){
 	str->str[0] = '\0';
