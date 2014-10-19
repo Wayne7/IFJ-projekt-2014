@@ -28,31 +28,11 @@ int main(){
 	printf("%s\n", token.content);
 	printf("%d\n", token.state);
 
-<<<<<<< HEAD
 	token = tGetToken();
 	printf("%s\n", token.content);
 
 	gFree();
 	
 	fclose(file);
-=======
-	tFreeToken();
-	
-	fclose(file);*/
-	
-	char *pole = NULL;
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-	pole = gMalloc(5);
-
-	char *policko = gMalloc(50);
-	pole = gReAlloc(pole, 100);
-
-	gFree();
-	
-	
->>>>>>> parent of 680a14a... update
 	return 0;
 }
