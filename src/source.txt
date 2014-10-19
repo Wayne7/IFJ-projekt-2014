@@ -1,1 +1,1 @@
-           nacitam lexemy_ = 5;
+          {zkousimcomment} := nacitam lexemy_ := 5

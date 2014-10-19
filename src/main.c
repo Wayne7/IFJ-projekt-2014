@@ -11,35 +11,48 @@ int main(){
 
 	
 
-	/*if ((file = fopen("source.txt", "r")) == NULL){
+	if ((file = fopen("source.txt", "r")) == NULL){
 		printf("Could not open file!\n");
 		return 1;
 	}
 
 
-	tInitToken();
-	tGetToken();
+	
+	
+	
+	tToken token;
 
+	
+
+	token = tGetToken();
 	printf("%s\n", token.content);
-	printf("%d\n", token.length);
+	printf("%d\n", token.state);
 
+<<<<<<< HEAD
+	token = tGetToken();
+	printf("%s\n", token.content);
+
+	gFree();
+	
+	fclose(file);
+=======
 	tFreeToken();
 	
 	fclose(file);*/
 	
-	gListInit();
-	string test;
-	strStringInit(&test);
-	strAddCharToString(&test, 'a');
-	strAddCharToString(&test, 'h');
-	strAddCharToString(&test, 'o');
-	strAddCharToString(&test, 'j');
+	char *pole = NULL;
+	pole = gMalloc(5);
+	pole = gMalloc(5);
+	pole = gMalloc(5);
+	pole = gMalloc(5);
+	pole = gMalloc(5);
 
-	printf("%s\n", test.str);
-	strEmptyString(&test);
-	printf("%s\n", test.str);
+	char *policko = gMalloc(50);
+	pole = gReAlloc(pole, 100);
 
 	gFree();
 	
+	
+>>>>>>> parent of 680a14a... update
 	return 0;
 }

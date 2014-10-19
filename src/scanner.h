@@ -14,6 +14,11 @@ typedef enum{
 	T_IDENTIFICATOR,			// 01 - identifikator
 	T_COMMENT,					// 02 - komentar
 	T_END,						// 03 - konec cteni
+	T_COLON,					// 04 - operator :
+	T_ASSIGN,					// 05 - operator prirazeni :=
+	T_SEMICOLON,				// 06 - strednik
+	T_LC,						// 07 - leva zavorka
+	T_RC,						// 08 - prava zavorka
 
 	// jeste jich sem prijde mnohem vic :)
 
