@@ -7,6 +7,9 @@
 #include <malloc.h>
 #include <stdbool.h>
 
+#define LEX_OK 20
+#define LEX_ERR 21
+#define LEX_EOF 22
 
 typedef enum{
 
@@ -19,11 +22,27 @@ typedef enum{
 	T_SEMICOLON,				// 06 - strednik
 	T_LC,						// 07 - leva zavorka
 	T_RC,						// 08 - prava zavorka
-
+	T_STRING,					// 09 - string
+	T_DIV,						// 10 - operator deleni /
+	T_MUL,						// 11 - operator nasobeni *
+	T_MINUS,					// 12 - operator odecitani -
+	T_PLUS,						// 13 - operator scitani +
+	T_COMMA,					// 14 - carka
+	T_LESSER,					// 15 operator <
+	T_LOE,						// 16 operator <=
+	T_NOTEQUAL,					// 17 operator <>
+	T_GREATER,					// 18 operator >
+	T_GOE,						// 19 operator >=
+	T_KEYWORD,					// 20 klicove slovo
+	T_DOT,						// 21 tecka
+	T_INTEGER,					// 22 integer
+	T_REAL,						// 23 real
 	// jeste jich sem prijde mnohem vic :)
 
 
 }tState;
+
+
 
 typedef struct{
 
@@ -35,10 +54,12 @@ typedef struct{
 }tToken;
 
 extern FILE *file;
+extern int LEX_STATE;
 
 tToken tGetToken();
-void tInitToken();
-void tFreeToken();
-void tExtentToken(int c);
+void tInitToken(tToken *token);
+void tFreeToken(tToken *token);
+void tExtendToken(tToken *token, int c);
+tState checkKeyWord(tToken token);
 
 #endif
