@@ -2,13 +2,16 @@
 #include "strings.h"
 #include "scanner.h"
 #include "garbage_collector.h"
+#include "parser.h"
 
 	FILE *file;		// soubor globalne
+	int LEX_STATE;
 
 
 
 int main(){
 
+	int result = SYNTAX_OK;
 	
 
 	if ((file = fopen("source.txt", "r")) == NULL){
@@ -16,21 +19,14 @@ int main(){
 		return 1;
 	}
 
-
+		result = parse();
+		if (result != SYNTAX_OK)
+			printf("Error!\n");
+		else
+			printf("OK!");
 	
 	
 	
-	tToken token;
-
-	
-
-	token = tGetToken();
-	printf("%s\n", token.content);
-	printf("%d\n", token.state);
-
-	token = tGetToken();
-	printf("%s\n", token.content);
-
 	gFree();
 	
 	fclose(file);
