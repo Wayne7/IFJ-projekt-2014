@@ -14,6 +14,31 @@ int body(tToken *token){
 	}
 
 
+	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU HLAVNIHO TELA PROGRAMU
+
+
+	*token = tGetToken();
+	if (token->state == T_ERR){
+		return LEX_ERR;
+	}
+	if (token->state != T_KEYWORD){
+		return SYNTAX_ERR;
+	}
+
+	if (strcmp(token->content, "end\0") != 0){
+		return SYNTAX_ERR;
+	}
+
+	*token = tGetToken();
+	if (token->state == T_ERR){
+		return LEX_ERR;
+	}
+	if (token->state != T_DOT){
+		return SYNTAX_ERR;
+	}
+
+
+
 	return result;
 }
 
@@ -21,8 +46,17 @@ int body(tToken *token){
 int funcStatement(tToken *token){
 	int result = SYNTAX_OK;
 
+	if (token->state != T_KEYWORD){
+		return SYNTAX_ERR;
+
+	}
+	if (strcmp(token->content, "begin\0") != 0){
+		return SYNTAX_ERR;
+
+	}
 
 
+	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU TELA FUNKCE
 
 
 	*token = tGetToken();
@@ -44,37 +78,6 @@ int funcStatement(tToken *token){
 		return LEX_ERR;
 	}
 
-	if (token->state != T_DOT){
-		return SYNTAX_ERR;
-	}
-
-	return result;
-}
-
-int funcVarNext(tToken *token){
-	int result = SYNTAX_OK;
-
-	if (token->state != T_IDENTIFICATOR){
-		return result;
-	}
-
-	*token = tGetToken();
-	if (token->state == T_ERR){
-		return LEX_ERR;
-	}
-
-	if (token->state != T_COLON){
-		return SYNTAX_ERR;
-	}
-
-	result = varType(token);
-	if (result != SYNTAX_OK)
-		return result;
-
-	*token = tGetToken();
-	if (token->state == T_ERR){
-		return LEX_ERR;
-	}
 	if (token->state != T_SEMICOLON){
 		return SYNTAX_ERR;
 	}
@@ -83,8 +86,9 @@ int funcVarNext(tToken *token){
 	if (token->state == T_ERR){
 		return LEX_ERR;
 	}
-
-
+	if (token->state != T_KEYWORD){
+		return SYNTAX_ERR;
+	}
 
 	return result;
 }
@@ -123,9 +127,12 @@ int funcVarList(tToken *token){
 	}
 
 	if (token->state == T_IDENTIFICATOR){
-		result = funcVarNext(token);
+		result = funcVarList(token);
 		if (result != SYNTAX_OK)
 			return result;
+	}
+	else{
+		return result;
 	}
 
 
@@ -146,41 +153,8 @@ int funcVariables(tToken *token){
 			if (result != SYNTAX_OK)
 				return result;
 		}
-		else{
-			return SYNTAX_ERR;
-		}
+		
 	}
-	else{
-		return SYNTAX_ERR;
-	}
-
-	return result;
-}
-
-int paramsNext(tToken *token){
-	int result = SYNTAX_OK;
-
-	*token = tGetToken();
-	if (token->state == T_ERR){
-		return LEX_ERR;
-	}
-
-	if (token->state == T_RC){
-		return result;
-	}
-
-	if (token->state != T_SEMICOLON){
-		return SYNTAX_ERR;
-	}
-
-	*token = tGetToken();
-	if (token->state == T_ERR){
-		return LEX_ERR;
-	}
-
-	result = params(token);
-	if (result != SYNTAX_OK)
-		return result;
 
 	return result;
 }
@@ -209,9 +183,27 @@ int params(tToken *token){
 	result = varType(token);
 	if (result != SYNTAX_OK)
 		return result;
-	result = paramsNext(token);
-	if (result != SYNTAX_OK)
+
+	*token = tGetToken();
+	if (token->state == T_ERR){
+		return LEX_ERR;
+	}
+
+	if (token->state == T_SEMICOLON){
+		*token = tGetToken();
+		if (token->state == T_ERR){
+			return LEX_ERR;
+		}
+		result = params(token);
+		if (result != SYNTAX_OK)
+			return result;
+	}
+	if (token->state == T_RC){
 		return result;
+	}
+	else{
+		return SYNTAX_ERR;
+	}
 
 
 	return result;
@@ -309,6 +301,7 @@ int defFunction(tToken *token){
 					if (result != SYNTAX_OK)
 						return result;
 				}
+
 			}
 
 		}
@@ -316,12 +309,23 @@ int defFunction(tToken *token){
 			result = funcVariables(token);
 			if (result != SYNTAX_OK)
 				return result;
+
+			result = funcStatement(token);
+			if (result != SYNTAX_OK)
+				return result;
+
+
+			if (token->state == T_KEYWORD){
+				if (!strcmp(token->content, "function\0")){
+					result = defFunction(token);
+					if (result != SYNTAX_OK)
+						return result;
+				}
+			}
 		}
 	}
 	else {
-		result = funcVariables(token);
-		if (result != SYNTAX_OK)
-			return result;
+		return SYNTAX_ERR;
 	}
 	
 
@@ -493,6 +497,8 @@ int program(tToken *token){
 	result = body(token);
 	if (result != SYNTAX_OK)
 		return result;
+
+
 
 	return result;
 }
