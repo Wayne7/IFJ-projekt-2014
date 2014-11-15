@@ -7,3 +7,6 @@
 #define LEX_ERR -3
 
 int parse();
+int varType(tToken *token);
+int params(tToken *token);
+int defFunction(tToken *token);
