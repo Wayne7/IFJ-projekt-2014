@@ -1,3 +1,6 @@
+#ifndef _PARSER
+#define _PARSER
+
 #include <stdio.h>
 #include "scanner.h"
 
@@ -10,3 +13,5 @@ int parse();
 int varType(tToken *token);
 int params(tToken *token);
 int defFunction(tToken *token);
+
+#endif

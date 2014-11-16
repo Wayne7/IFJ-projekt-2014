@@ -30,5 +30,6 @@ int main(){
 	gFree();
 	
 	fclose(file);
+
 	return 0;
 }

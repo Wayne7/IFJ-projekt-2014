@@ -43,7 +43,6 @@ tToken tGetToken(){
 	tState state = T_START;			// stav automatu
 	int c;							// promenna, do ktere nacitam znaky
 	tInitToken(&token);
-	LEX_STATE = LEX_OK;
 
 	while (1){
 
@@ -107,11 +106,11 @@ tToken tGetToken(){
 									 break;
 								 }
 								 else if (c == EOF){
-									 LEX_STATE = LEX_EOF;	 
+									 token.state = T_EOF;	 
 									 return token;
 								 }
 								 else{
-									 LEX_STATE = LEX_ERR;
+									 token.state = T_ERR;
 									 return token;
 								
 								 }
@@ -150,7 +149,7 @@ tToken tGetToken(){
 
 			case T_STRING:{
 							  if (c == EOF){
-								  LEX_STATE = LEX_ERR;
+								  token.state = T_ERR;
 								  return token;
 							  }
 
@@ -225,7 +224,7 @@ tToken tGetToken(){
 								   state = T_START;
 							   }
 							   if (c == EOF){
-								   LEX_STATE = LEX_ERR;
+								   token.state = T_ERR;
 								   return token;
 							   }
 							   break;
