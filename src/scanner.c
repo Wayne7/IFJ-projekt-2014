@@ -47,6 +47,7 @@ tToken tGetToken(){
 	while (1){
 
 		c = getc(file);
+		c = tolower(c);				// interpret je case insensitive, vsechny znaky prevedu na male
 		switch (state){
 
 			case T_START:{
