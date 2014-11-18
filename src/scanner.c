@@ -4,7 +4,7 @@
 void tInitToken(tToken *token){
 	token->content = NULL;
 	token->row = 0;				// potreba zavest globalni promennou, ktera bude urcovat na kterem jsme radku!
-	token->state = T_START;		// zatim stav tokenu nefunkcni
+	token->state = T_START;		
 	token->length = 0;
 }
 
@@ -47,7 +47,10 @@ tToken tGetToken(){
 	while (1){
 
 		c = getc(file);
+
+		if (c >= 'A' && c <= 'Z')
 		c = tolower(c);				// interpret je case insensitive, vsechny znaky prevedu na male
+
 		switch (state){
 
 			case T_START:{
