@@ -27,7 +27,6 @@ int BTInsert(symbolTablePtr *root, char *key, symbol s){
 	}
 	else{
 		int cmp = strcmp((*root)->key, key);
-		printf("%d\n", cmp);
 
 		if (cmp < 0){
 			return BTInsert(&(*root)->LPtr, key, s);
