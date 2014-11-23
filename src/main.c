@@ -29,9 +29,6 @@ int main(){
 			printf("neni tam\n");
 		}
 
-		printf("%d\n", symbolTable->RPtr->LPtr->content.type);
-
-
 		if (result != SYNTAX_OK){
 			printf("%d\n", result);
 			printf("Error!\n");
