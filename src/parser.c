@@ -1,9 +1,7 @@
 #include "parser.h"
 
-
-int body(tToken *token){
+int body(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
-
 
 	if (token->state != T_KEYWORD){
 		return SYNTAX_ERR;
@@ -13,7 +11,7 @@ int body(tToken *token){
 		return SYNTAX_ERR;
 	}
 
-
+	
 	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU HLAVNIHO TELA PROGRAMU
 
 
@@ -37,13 +35,20 @@ int body(tToken *token){
 		return SYNTAX_ERR;
 	}
 
+	*token = tGetToken();
+	if (token->state == T_ERR){
+		return LEX_ERR;
+	}
+
+	if (token->state != T_EOF){
+		return SYNTAX_ERR;
+	}
 
 
 	return result;
 }
 
-
-int funcStatement(tToken *token){
+int funcStatement(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	if (token->state != T_KEYWORD){
@@ -55,9 +60,7 @@ int funcStatement(tToken *token){
 
 	}
 
-
 	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU TELA FUNKCE
-
 
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -93,7 +96,7 @@ int funcStatement(tToken *token){
 	return result;
 }
 
-int funcVarList(tToken *token){
+int funcVarList(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	if (token->state != T_IDENTIFICATOR){
@@ -109,7 +112,11 @@ int funcVarList(tToken *token){
 		return SYNTAX_ERR;
 	}
 
-	result = varType(token);
+	symbol tmp; // OPRAVIT
+	tmp.key = token->content;
+	tmp.isFunction = false;
+
+	result = varType(token, symbolTable, &tmp);
 	if (result != SYNTAX_OK)
 		return result;
 
@@ -127,7 +134,7 @@ int funcVarList(tToken *token){
 	}
 
 	if (token->state == T_IDENTIFICATOR){
-		result = funcVarList(token);
+		result = funcVarList(token, symbolTable);
 		if (result != SYNTAX_OK)
 			return result;
 	}
@@ -140,7 +147,7 @@ int funcVarList(tToken *token){
 	return result;
 }
 
-int funcVariables(tToken *token){
+int funcVariables(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	if (token->state == T_KEYWORD){
@@ -149,7 +156,7 @@ int funcVariables(tToken *token){
 			if (token->state == T_ERR){
 				return LEX_ERR;
 			}
-			result = funcVarList(token);
+			result = funcVarList(token, symbolTable);
 			if (result != SYNTAX_OK)
 				return result;
 		}
@@ -159,8 +166,7 @@ int funcVariables(tToken *token){
 	return result;
 }
 
-int params(tToken *token){
-
+int params(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	if (token->state == T_RC){
@@ -180,7 +186,11 @@ int params(tToken *token){
 		return SYNTAX_ERR;
 	}
 
-	result = varType(token);
+	symbol tmp;		///////// !!!! OPRAVIT !!!!!!!!
+	tmp.key = token->content;
+	tmp.isFunction = false;
+
+	result = varType(token, symbolTable, &tmp);
 	if (result != SYNTAX_OK)
 		return result;
 
@@ -194,7 +204,7 @@ int params(tToken *token){
 		if (token->state == T_ERR){
 			return LEX_ERR;
 		}
-		result = params(token);
+		result = params(token, symbolTable);
 		if (result != SYNTAX_OK)
 			return result;
 	}
@@ -209,10 +219,8 @@ int params(tToken *token){
 	return result;
 }
 
-
-int defFunction(tToken *token){
+int defFunction(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
-
 
 	if (token->state != T_KEYWORD){
 		return result;
@@ -231,6 +239,19 @@ int defFunction(tToken *token){
 	if (token->state != T_IDENTIFICATOR){
 		return LEX_ERR;
 	}
+
+	symbolTablePtr test = NULL;
+
+	if((test = BTSearch(symbolTable, token->content)) != NULL){
+		if (test->content.isDefined == true){
+			return SEM_ERR;
+		}
+	}
+
+	symbol tmp;
+	tmp.key = token->content;
+	tmp.isFunction = true;
+	tmp.isDefined = false;
 	
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -246,7 +267,7 @@ int defFunction(tToken *token){
 		return LEX_ERR;
 	}
 
-	result = params(token);
+	result = params(token, symbolTable);
 	if (result != SYNTAX_OK)
 		return result;
 
@@ -259,7 +280,7 @@ int defFunction(tToken *token){
 		return SYNTAX_ERR;
 	}
 
-	result = varType(token);
+	result = varType(token, symbolTable, &tmp);
 	if (result != SYNTAX_OK)
 		return result;
 
@@ -290,6 +311,15 @@ int defFunction(tToken *token){
 				return SYNTAX_ERR;
 			}
 
+			if (test == NULL){
+				if (BTInsert(symbolTable, tmp.key, tmp) == BT_ERR){  //pokud je deklarace syntakticky spravne, vlozim prvek do tabulky symbolu a zkontroluji zda se tam jiz nenachazi
+					return SEM_ERR;
+				}
+			}
+			else{
+				return SEM_ERR;										// pokud funkce byla jednou definovana, zahlasim semantickou chybu
+			}
+
 			*token = tGetToken();
 			if (token->state == T_ERR){
 				return LEX_ERR;
@@ -297,7 +327,7 @@ int defFunction(tToken *token){
 
 			if (token->state == T_KEYWORD){
 				if (!strcmp(token->content, "function\0")){
-					result = defFunction(token);
+					result = defFunction(token, symbolTable);
 					if (result != SYNTAX_OK)
 						return result;
 				}
@@ -306,18 +336,28 @@ int defFunction(tToken *token){
 
 		}
 		else {
-			result = funcVariables(token);
+			result = funcVariables(token, symbolTable);
 			if (result != SYNTAX_OK)
 				return result;
 
-			result = funcStatement(token);
+			result = funcStatement(token, symbolTable);
 			if (result != SYNTAX_OK)
 				return result;
 
+			tmp.isDefined = true;			//funkce byla definovana
+
+			if (test == NULL){
+				if (BTInsert(symbolTable, tmp.key, tmp) == BT_ERR){  //pokud je deklarace a definice syntakticky spravne, vlozim prvek do tabulky symbolu a zkontroluji zda se tam jiz nenachazi
+					return SEM_ERR;
+				}
+			}
+			else{
+				test->content.isDefined = true;						// pokud funkce byla deklarovana, v promenne test mam ulozen odkaz na funkci ktera byla definovana 
+			}
 
 			if (token->state == T_KEYWORD){
 				if (!strcmp(token->content, "function\0")){
-					result = defFunction(token);
+					result = defFunction(token, symbolTable);
 					if (result != SYNTAX_OK)
 						return result;
 				}
@@ -328,8 +368,6 @@ int defFunction(tToken *token){
 		return SYNTAX_ERR;
 	}
 	
-
-
 	return result;
 }
 
@@ -337,7 +375,7 @@ int defFunction(tToken *token){
 //			<var_type> -> real
 //			<var_type> -> boolean
 //			<var_type> -> string
-int varType(tToken *token){
+int varType(tToken *token, symbolTablePtr *symbolTable, symbol *s){
 	*token = tGetToken();
 	if (token->state == T_ERR){
 		return LEX_ERR;
@@ -345,15 +383,19 @@ int varType(tToken *token){
 
 	if (token->state == T_KEYWORD){
 		if (!strcmp(token->content, "integer\0")){
+			s->type = tInt;
 			return SYNTAX_OK;
 		}
 		if (!strcmp(token->content, "real\0")){
+			s->type = tReal;
 			return SYNTAX_OK;
 		}
 		if (!strcmp(token->content, "boolean\0")){
+			s->type = tBool;
 			return SYNTAX_OK;
 		}
 		if (!strcmp(token->content, "string\0")){
+			s->type = tString;
 			return SYNTAX_OK;
 		}
 	}
@@ -361,12 +403,16 @@ int varType(tToken *token){
 	
 }
 
-int globalListNext(tToken *token){
+int globalListNext(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	if (token->state != T_IDENTIFICATOR){
 		return result;
 	}
+
+	symbol tmp;
+	tmp.key = token->content;
+	tmp.isFunction = false;
 
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -376,7 +422,7 @@ int globalListNext(tToken *token){
 		return SYNTAX_ERR;
 	}
 
-	if ((result = varType(token)) != SYNTAX_OK){
+	if ((result = varType(token, symbolTable, &tmp)) != SYNTAX_OK){
 		return result;
 	}
 
@@ -388,6 +434,9 @@ int globalListNext(tToken *token){
 	if (token->state != T_SEMICOLON){
 		return SYNTAX_ERR;
 	}
+	if (BTInsert(symbolTable, tmp.key, tmp) == BT_ERR){  //pokud je deklarace syntakticky spravne, vlozim prvek do tabulky symbolu a zkontroluji zda se tam jiz nenachazi
+		return SEM_ERR;
+	}
 
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -395,24 +444,25 @@ int globalListNext(tToken *token){
 	}
 
 	if (token->state == T_IDENTIFICATOR){	// pokud nasleduje dalsi identifikator, volam funkci znova
-		result = globalListNext(token);
+		result = globalListNext(token, symbolTable);
 		if (result != SYNTAX_OK)
 			return result;
 	}
-
-
-
 
 	return result;
 }
 
 // pravidlo <global_list> -> id : <var_type> ; <global_list_next>
-int globalList(tToken *token){
+int globalList(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	if (token->state != T_IDENTIFICATOR){
 		return SYNTAX_ERR;
 	}
+
+	symbol tmp;					
+	tmp.key = token->content;
+	tmp.isFunction = false;
 
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -422,7 +472,7 @@ int globalList(tToken *token){
 		return SYNTAX_ERR;
 	}
 
-	if ((result = varType(token)) != SYNTAX_OK){
+	if ((result = varType(token, symbolTable, &tmp)) != SYNTAX_OK){
 		return result;
 	}
 
@@ -434,6 +484,9 @@ int globalList(tToken *token){
 	if (token->state != T_SEMICOLON){
 		return SYNTAX_ERR;
 	}
+	if (BTInsert(symbolTable, tmp.key, tmp) == BT_ERR){  //pokud je deklarace syntakticky spravne, vlozim prvek do tabulky symbolu a zkontroluji zda se tam jiz nenachazi
+		return SEM_ERR;
+	}
 
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -441,21 +494,17 @@ int globalList(tToken *token){
 	}
 
 	if (token->state == T_IDENTIFICATOR){	// pokud nasleduje dalsi identifikator, volam funkci znova
-		result = globalListNext(token);
+		result = globalListNext(token, symbolTable);
 		if (result != SYNTAX_OK)
 			return result;
 	}
-
-
-
 
 	return result;
 }
 
 //pravidlo <def_global> -> var <global_list>
 //		   <def_global> -> eps
-int defGlobal(tToken *token){
-
+int defGlobal(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
 	*token = tGetToken();
@@ -469,46 +518,39 @@ int defGlobal(tToken *token){
 			if (token->state == T_ERR){
 				return LEX_ERR;
 			}
-			result = globalList(token);
+			result = globalList(token, symbolTable);
 			if (result != SYNTAX_OK)
 				return result;
 		}
 	}
 
-
-
 	return result;
 }
-
 
 //pravidlo <program> -> <def_global> <def_function> <stat_list> <EOF>
-int program(tToken *token){
-
+int program(tToken *token, symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 
-	result = defGlobal(token);
+	result = defGlobal(token, symbolTable);
 	if (result != SYNTAX_OK)
 		return result;
 
-	result = defFunction(token);
+	result = defFunction(token, symbolTable);
 	if (result != SYNTAX_OK)
 		return result;
 
-	result = body(token);
+	result = body(token, symbolTable);
 	if (result != SYNTAX_OK)
 		return result;
-
-
 
 	return result;
 }
 
 
-int parse(){
-
+int parse(symbolTablePtr *symbolTable){
 	int result = SYNTAX_OK;
 	tToken token;
-	result = program(&token);
+	result = program(&token, symbolTable);
 
 	return result;
 }
