@@ -3,16 +3,19 @@
 	tyjelk : integer;
 	zaknaktel : boolean;
 	
+	function fungujeto (test : real) : string; forward;
+
+
 	function doge (pes : integer; kocka : boolean) : integer ; forward;
 
 
-	function doge (pes : integer; kocka : boolean) : integer ; 
+	function doge (pes : integer; kocka : boolean) : real ; 
 	begin
 		{telo funkce zatim neinplementovano}
 	end;
 
-
 	function uznevim () : integer; forward;
+
 
 
 	function fungujeto (test : real) : string;
@@ -22,9 +25,13 @@
 	begin
 		{neco}
 	end;
+
+
+
 	
 
 	
 	begIN
-	{telo programu taky ne}
+	
+			{5 + 5 ;}
 	end.
