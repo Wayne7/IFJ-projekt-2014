@@ -36,6 +36,7 @@ typedef enum{
 	T_REAL,						// 23 - real
 	T_EOF,						// 24 - EOF
 	T_ERR,						// 25 - error
+	T_EQUAL,					// 26 - operator =
 	// jeste jich sem prijde mnohem vic :)
 
 

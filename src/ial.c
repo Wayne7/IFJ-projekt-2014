@@ -6,8 +6,6 @@
 *	Implementace binarniho stromu prevzata z druhe domaci ulohy do predmetu IAL
 */
 
-
-
 int BTInsert(symbolTablePtr *root, char *key, symbol s){
 	if (*root == NULL){
 		symbolTablePtr tmp;
@@ -27,7 +25,6 @@ int BTInsert(symbolTablePtr *root, char *key, symbol s){
 	}
 	else{
 		int cmp = strcmp((*root)->key, key);
-		printf("%d\n", cmp);
 
 		if (cmp < 0){
 			return BTInsert(&(*root)->LPtr, key, s);
