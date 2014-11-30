@@ -82,9 +82,6 @@ tToken tGetToken(){
 								 else if (c == '+'){
 									 state = T_PLUS;
 								 }
-								 else if (c == '='){
-									 state = T_EQUAL;
-								 }
 								 else if (c == ','){
 									 state = T_COMMA;
 								 }
@@ -247,7 +244,6 @@ tToken tGetToken(){
 			case T_MUL:
 			case T_MINUS:
 			case T_PLUS:
-			case T_EQUAL:
 			case T_COMMA:
 			case T_NOTEQUAL:
 			case T_LOE:

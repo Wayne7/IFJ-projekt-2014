@@ -30,6 +30,4 @@ void gFree();
 void updateList(void *memory, int size, void *memoryToFree);				// pomocne funkce
 void cancelPtr(void *memoryToFree);
 
-extern int result;
-
 #endif

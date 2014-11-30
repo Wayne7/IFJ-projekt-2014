@@ -1,10 +1,7 @@
 #include "parser.h"
 
-int result;			// globalni promenna pro kontrolu chyb
-
-
-
 int body(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
 
 	if (token->state != T_KEYWORD){
 		return SYNTAX_ERR;
@@ -14,12 +11,7 @@ int body(tToken *token, symbolTablePtr *symbolTable){
 		return SYNTAX_ERR;
 	}
 
-	/**token = tGetToken();
-	if (token->state == T_ERR){
-		return LEX_ERR;
-	}
-
-	result = precedence(token);*/
+	
 	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU HLAVNIHO TELA PROGRAMU
 
 
@@ -57,6 +49,8 @@ int body(tToken *token, symbolTablePtr *symbolTable){
 }
 
 int funcStatement(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state != T_KEYWORD){
 		return SYNTAX_ERR;
 
@@ -103,6 +97,8 @@ int funcStatement(tToken *token, symbolTablePtr *symbolTable){
 }
 
 int funcVarList(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state != T_IDENTIFICATOR){
 		return SYNTAX_ERR;
 	}
@@ -152,6 +148,8 @@ int funcVarList(tToken *token, symbolTablePtr *symbolTable){
 }
 
 int funcVariables(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state == T_KEYWORD){
 		if (!strcmp(token->content, "var\0")){
 			*token = tGetToken();
@@ -169,6 +167,8 @@ int funcVariables(tToken *token, symbolTablePtr *symbolTable){
 }
 
 int params(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state == T_RC){
 		return result;
 	}
@@ -220,6 +220,8 @@ int params(tToken *token, symbolTablePtr *symbolTable){
 }
 
 int defFunction(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state != T_KEYWORD){
 		return result;
 	}
@@ -241,7 +243,7 @@ int defFunction(tToken *token, symbolTablePtr *symbolTable){
 	symbolTablePtr test = NULL;
 
 	if((test = BTSearch(symbolTable, token->content)) != NULL){
-		if (test->content.isDefined){
+		if (test->content.isDefined == true){
 			return SEM_ERR;
 		}
 	}
@@ -402,6 +404,8 @@ int varType(tToken *token, symbolTablePtr *symbolTable, symbol *s){
 }
 
 int globalListNext(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state != T_IDENTIFICATOR){
 		return result;
 	}
@@ -450,6 +454,8 @@ int globalListNext(tToken *token, symbolTablePtr *symbolTable){
 
 // pravidlo <global_list> -> id : <var_type> ; <global_list_next>
 int globalList(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	if (token->state != T_IDENTIFICATOR){
 		return SYNTAX_ERR;
 	}
@@ -499,6 +505,8 @@ int globalList(tToken *token, symbolTablePtr *symbolTable){
 //pravidlo <def_global> -> var <global_list>
 //		   <def_global> -> eps
 int defGlobal(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	*token = tGetToken();
 	if (token->state == T_ERR){
 		return LEX_ERR;
@@ -521,6 +529,8 @@ int defGlobal(tToken *token, symbolTablePtr *symbolTable){
 
 //pravidlo <program> -> <def_global> <def_function> <stat_list> <EOF>
 int program(tToken *token, symbolTablePtr *symbolTable){
+	int result = SYNTAX_OK;
+
 	result = defGlobal(token, symbolTable);
 	if (result != SYNTAX_OK)
 		return result;
@@ -538,7 +548,7 @@ int program(tToken *token, symbolTablePtr *symbolTable){
 
 
 int parse(symbolTablePtr *symbolTable){
-	result = SYNTAX_OK;
+	int result = SYNTAX_OK;
 	tToken token;
 	result = program(&token, symbolTable);
 
