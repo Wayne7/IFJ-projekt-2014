@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "ial.h"
 #include "precedence.h"
+#include "ilist.h"
 
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -29,7 +30,7 @@ int main(int argc, char** argv){
 		return 99;
 	}
 
-		symbolTablePtr symbolTable;
+		/*symbolTablePtr symbolTable;
 		BTInit(&symbolTable);
 
 		result = parse(&symbolTable);
@@ -41,8 +42,15 @@ int main(int argc, char** argv){
 		else
 			printf("OK!\n");
 	
+		tInstList list;
+		instListInit(&list);*/
 
-	
+	tToken token;
+	tInitToken(&token);
+	token = tGetToken();
+
+	printf("%d\n", token.state);
+	printf("%s\n", token.content);
 
 	gFree();
 	printf("memory leaks: %d\n", _CrtDumpMemoryLeaks());

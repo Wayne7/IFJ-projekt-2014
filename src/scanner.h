@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <malloc.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 
 typedef enum{
@@ -37,6 +38,13 @@ typedef enum{
 	T_EOF,						// 24 - EOF
 	T_ERR,						// 25 - error
 	T_EQUAL,					// 26 - operator =
+	T_EXPREAL0,					// 27 - pomocny stav
+	T_EXPREAL,					// 28 - desetinne cislo v exponencionalnim tvaru
+	T_EXPREAL1,
+	T_REAL1,
+	T_STRING1,
+	T_STRING2,
+	T_STRING3
 	// jeste jich sem prijde mnohem vic :)
 
 

@@ -1,5 +1,9 @@
+#ifndef _ILIST
+#define _ILIST
+
 #include <stdio.h>
 #include "garbage_collector.h"
+#include "parser.h"
 
 
 /* vycet typu instrukci (neni komplet zatim --hruby navrh-- ) */
@@ -45,3 +49,10 @@ typedef struct{
 	tItem *Active;
 	tItem *Last;
 }tInstList;
+
+
+void instListInit(tInstList *list);
+void instListSucc(tInstList *list);
+void instListInsert(tInstList *list, tInst inst);
+
+#endif

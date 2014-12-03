@@ -251,6 +251,7 @@ int defFunction(tToken *token, symbolTablePtr *symbolTable){
 	tmp.isFunction = true;
 	tmp.isDefined = false;
 	
+
 	*token = tGetToken();
 	if (token->state == T_ERR){
 		return LEX_ERR;

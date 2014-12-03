@@ -22,14 +22,23 @@ typedef enum{
 	tReal
 }sType;
 
+typedef struct{
+	char *name;
+	sType type;
+}sParam;
+
+typedef struct params{
+	sParam param;
+	struct params *ptr;
+}sParams;
 
 typedef struct Symbol{
 	char *key;
 	sType type;
-	sValue value;
+	sParams params;
 	bool isFunction;
 	bool isDefined;
-
+	//symbolTablePtr symbolTable;		// lokalni tabulka symbolu pro funkce
 
 }symbol, *symbolPtr;
 

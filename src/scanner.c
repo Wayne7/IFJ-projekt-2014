@@ -15,6 +15,34 @@ void tExtendToken(tToken *token, int c){
 
 }
 
+void *extendNumber(char *number, int c, int *length){
+
+	if (number == NULL){
+		if ((number = malloc(sizeof(char)* 2)) == NULL){
+			return NULL;
+		}
+		number[0] = c;
+		number[1] = '\0';
+		*length = 1;
+		return number;
+	}
+	else{
+		if ((number = (char*)realloc(number, sizeof(char)*2 + *length+1)) == NULL){
+			return NULL;
+		}
+		number[*length] = c;
+		++(*length);
+		number[*length] = '\0';
+		
+		return number;
+	}
+}
+
+void freeNumber(char *number, int *length){
+	*length = 0;
+	free(number);
+}
+
 
 void tPutCharToStream(int c){		// pokud nactu dalsi znak a jiz nevyhovuje, musim jej "vratit" zpet pro dalsi cteni
 	if (!(isspace(c))){
@@ -44,18 +72,20 @@ tToken tGetToken(){
 	int c;							// promenna, do ktere nacitam znaky
 	tInitToken(&token);
 
+	char *number = NULL;
+	int length = 0;
+
 	while (1){
 
 		c = getc(file);
-
-		if (c >= 'A' && c <= 'Z')
-		c = tolower(c);				// interpret je case insensitive, vsechny znaky prevedu na male
 
 		switch (state){
 
 			case T_START:{
 
 								 if (isalpha(c) || c == '_'){
+									 if (c >= 'A' && c <= 'Z')
+										 c = tolower(c);				// interpret je case insensitive, vsechny znaky prevedu na male
 									state = T_IDENTIFICATOR;
 								 }
 								 else if (c == ':'){
@@ -131,6 +161,8 @@ tToken tGetToken(){
 			case T_IDENTIFICATOR:{
 
 								 if (isalpha(c) || isdigit(c) || c == '_'){
+									 if (c >= 'A' && c <= 'Z')
+										 c = tolower(c);				// interpret je case insensitive, vsechny znaky prevedu na male
 									 tExtendToken(&token, c);
 									 break;
 								 }
@@ -161,8 +193,8 @@ tToken tGetToken(){
 							  }
 
 							  if (c == '\''){
-								  token.state = T_STRING;
-								  return token;
+								  state = T_STRING1;
+								  break;
 							  }
 							  else{
 								  tExtendToken(&token, c);
@@ -170,6 +202,64 @@ tToken tGetToken(){
 							  break;
 
 			}
+
+			case T_STRING1:{
+							   if (c == '#'){
+								   state = T_STRING2;
+								   break;
+							   }
+							   else if (c == '\''){
+								   tExtendToken(&token, c);
+								   state = T_STRING;
+								   break;
+							   }
+							   else{
+								   token.state = T_STRING;
+								   tPutCharToStream(c);
+								   return token;
+							   }
+			}
+
+			case T_STRING2:{
+							   if (c == '0'){
+								   state = T_STRING2;
+								   break;
+							   }
+							   else if (c >= '1' && c <= '9'){
+								   number = extendNumber(number, c, &length);
+								   state = T_STRING3;
+								   break;
+							   }
+			}
+			case T_STRING3:{
+							   if (isdigit(c)){
+								   number = extendNumber(number, c, &length);
+								   state = T_STRING3;
+								   break;
+							   }
+							   else if (c == '\''){
+								   int tmp = strtol(number, NULL,0);
+								   if (tmp >= 1 && tmp <= 255){
+										tExtendToken(&token, tmp);
+										freeNumber(number, &length);
+										number = NULL;
+										state = T_STRING;
+										break;
+								   }
+								   else{
+									   freeNumber(number, &length);
+									   number = NULL;
+									   token.state = T_ERR;
+									   return token;
+								   }
+							   }
+							   else{
+								   token.state = T_ERR;
+								   return token;
+							   }
+
+			}
+
 			case T_LESSER:{
 							  if (c == '='){
 								  state = T_LOE;
@@ -205,7 +295,7 @@ tToken tGetToken(){
 								   break;
 							   }
 							   else if (c == '.'){
-								   state = T_REAL;
+								   state = T_REAL1;
 								   tExtendToken(&token, c);
 								   break;
 							   }
@@ -215,8 +305,24 @@ tToken tGetToken(){
 								   return token;
 							   }
 			}
+			case T_REAL1:{
+							 if (!isdigit(c)){
+								 token.state = T_ERR;
+								 return token;
+							 }
+							 else{
+								 state = T_REAL;
+								 tExtendToken(&token, c);
+								 break;
+							 }
+			}
 			case T_REAL:{
 							if (isdigit(c)){
+								tExtendToken(&token, c);
+								break;
+							}
+							if (c == 'e'){
+								state = T_EXPREAL0;
 								tExtendToken(&token, c);
 								break;
 							}
@@ -225,6 +331,55 @@ tToken tGetToken(){
 								tPutCharToStream(c);
 								return token;
 							}
+			}
+			case T_EXPREAL0:{
+								if (c == '+'){
+									state = T_EXPREAL;
+									tExtendToken(&token, c);
+									break;
+								}
+								else if (c == '-'){
+									state = T_EXPREAL;
+									tExtendToken(&token, c);
+									break;
+								}
+								else if (isdigit(c)){
+									state = T_EXPREAL1;
+									tExtendToken(&token, c);
+									break;
+								}
+								else if (c == EOF){
+									token.state = T_ERR;
+									return token;
+								}
+								else{
+									token.state = T_ERR;
+									return token;
+								}
+			}
+
+			case T_EXPREAL:{
+							   if (!isdigit(c)){
+								   token.state = T_ERR;
+								   return token;
+							   }
+							   else{
+								   state = T_EXPREAL1;
+								   tExtendToken(&token, c);
+								   break;
+							   }
+			}
+
+			case T_EXPREAL1:{
+								if (isdigit(c)){
+									tExtendToken(&token, c);
+									break;
+								}
+								else{
+									token.state = T_REAL;
+									tPutCharToStream(c);
+									return token;
+								}
 			}
 			case T_COMMENT:{
 							   if (c == '}'){
@@ -260,8 +415,6 @@ tToken tGetToken(){
 								 
 
 			}
-
-
 
 		}
 	}
