@@ -1,11 +1,12 @@
 #include "precedence.h"
 
+tableEntries tramtadadaa = nula;
 
 void stackInit(stack *ptr){
 	ptr->top = NULL;
 }
 
-void push(stack *ptr, tableData data){
+void push(stack *ptr, tableEntries data){
 	stackItem item;
 
 	if ((item = malloc(sizeof(struct sItem))) == NULL){
@@ -15,6 +16,8 @@ void push(stack *ptr, tableData data){
 	item->ptr = ptr->top;
 	ptr->top = item;
 }
+
+
 
 void pop(stack *ptr){
 	stackItem item;
@@ -26,10 +29,10 @@ void pop(stack *ptr){
 	}
 }
 
-void top(stack *ptr, tableData *data){
-	if (ptr->top != NULL){
-		*data = ptr->top->data;
-	}
+tableEntries top(stack *ptr){
+	if (ptr->top != NULL)
+		return ptr->top->data;
+	return error;
 }
 
 bool stackEmpty(stack *ptr){
@@ -46,6 +49,24 @@ void freeStack(stack *ptr){
 	}
 }
 
+void printStack(stack *ptr){
+	int i = 0;
+	stack s;
+	stackInit(&s);
+	while(ptr->top != NULL){
+		push(&s,top(ptr));
+		pop(ptr);
+	}
+	printf("----------------------\n");
+	while(s.top != NULL){
+		push(ptr,top(&s));
+		printf("%d: %d\n",i,top(&s));
+		pop(&s);
+		i++;
+	}
+	printf("----------------------\n");
+	
+}
 
 const tablePriorities precedenceTable[14][14] = {
 
@@ -66,150 +87,309 @@ const tablePriorities precedenceTable[14][14] = {
 	/* $ */		{L, L, L, L, L, L, L, L, L, L, L, L, B, B}
 };
 
-int getIndex(tToken *token, tableData *col){
+tableEntries getIndex(tToken *token){
 
 
 	switch (token->state)
 	{
 	case T_MUL:{
-		col->entry = mul;
-		break;
+		return mul;
 	}
 
 	case T_DIV:{
-		col->entry = divide;
-		break;
+		return divide;
 	}
 
 	case T_PLUS:{
-		col->entry = plus;
-		break;
+		return plus;
 	}
 
 	case T_MINUS:{
-		col->entry = minus;
-		break;
+		return minus;
 	}
 
 	case T_LESSER:{
-		col->entry = lesser;
-		break;
+		return lesser;
 	}
 
 	case T_GREATER:{
-		col->entry = greater;
-		break;
+		return greater;
 	}
 
 	case T_LOE:{
-		col->entry = loe;
-		break;
+		return loe;
 	}
 
 	case T_GOE:{
-		col->entry = goe;
-		break;
+		return goe;
 	}
 
 	case T_EQUAL:{
-		col->entry = equal;
-		break;
+		return equal;
 	}
 
 	case T_NOTEQUAL:{
-		col->entry = notequal;
-		break;
+		return notequal;
 	}
 
 	case T_LC:{
-		col->entry = lc;
-		break;
+		return lc;
 	}
 
 	case T_RC:{
-		col->entry = rc;
-		break;
+		return rc;
 	}
 
 	case T_SEMICOLON:{
-		col->entry = dolar;
-		break;
+		return dolar;
 	}
 
 	case T_INTEGER:
 	case T_REAL :
 	case T_IDENTIFICATOR : {
-					col->entry = id;
-		   break;
+		return id;
+		
 	}
 
 	default:{
 		printf("Unexcepted symbol\n");
-		return SYNTAX_ERR;
+		return error;
 	}
 
 	}
 
-	return SYNTAX_OK;
 }
 
 
-int reduction(stack *stack){
+tableEntries reduction(stack *stack){
+	tableEntries tmp;	//pomocná proměnná
+	tableEntries item;	// návratová hodnota
 
+	tmp = top(stack);
+	pop(stack);
+	switch(tmp){
 
-
-}
-
-int precedence(tToken *token){
-	stack s1;			// zasobniky pro ukladani terminalu a neterminalu
-	stack s2;
-
-	tableData row;		// symbol na zasobniku
-	tableData col;		// symbol na vstupu
-	tableData tmp;
-
-	stackInit(&s1);		// inicializace
-	stackInit(&s2);
-
-	row.entry = dolar;
-	push(&s1, row);
-
-
-	//do{
-		result = getIndex(token, &col);
-
-
-		switch (precedenceTable[row.entry][col.entry]){
-
-		case B:{
-				   freeStack(&s1);			// pokud je v tabulce prazdno, jedna se o syntaktickou chybu
-				   freeStack(&s2);
-				return SYNTAX_ERR;
-		}
-
-		case G:{
-				   result = reduction(&s1);
-				   break;
-		}
-		case L:{
-				   tmp.entry = slesser;
-				   push(&s1,tmp);
-				   push(&s1, col);
-				   row.entry = col.entry;
-				   break;
-		}
-
-		default:{
-
-			break;
+		case mul:{
+			if(tramtadadaa == nonterminal){
+				tramtadadaa = nula;
+				if(top(stack) == nonterminal){
+					pop(stack);
+					pop(stack);
+					item = top(stack);
+					push(stack, nonterminal);
+					printf("mul\n");
+					return item;
+				}
+				else{
+					result = SYNTAX_ERR;
+					return error;
+				}
+			}
+			else{
+				result = SYNTAX_ERR;
+				return error;
 			}
 		}
 
-	//} while ();
+		case divide:{
+			if(tramtadadaa == nonterminal){
+				tramtadadaa = nula;
+				if(top(stack) == nonterminal){
+					pop(stack);
+					pop(stack);
+					item = top(stack);
+					push(stack, nonterminal);
+					printf("div\n");
+					return item;
+				}
+				else{
+					result = SYNTAX_ERR;
+					return error;
+				}
+			}
+			else{
+				result = SYNTAX_ERR;
+				return error;}
+		}
+		case plus:{
+			if(tramtadadaa == nonterminal){
+				tramtadadaa = nula;
+				if(top(stack) == nonterminal){
+					pop(stack);
+					pop(stack);
+					item = top(stack);
+					push(stack, nonterminal);
+					printf("plus\n");
+					return item;
+				}
+				else{
+					result = SYNTAX_ERR;
+					return error;
+				}
+			}
+			else{
+				result = SYNTAX_ERR;
+				return error;}
+		}
+		case minus:{
+			if(tramtadadaa == nonterminal){
+				tramtadadaa = nula;
+				if(top(stack) == nonterminal){
+					pop(stack);
+					pop(stack);
+					item = top(stack);
+					push(stack, nonterminal);
+					printf("minus\n");
+					return item;
+				}
+				else{
+					result = SYNTAX_ERR;
+					return error;
+				}
+			}
+			else{
+				result = SYNTAX_ERR;
+				return error;
+			}
+		}
+		case lesser:
+		case greater:
+		case loe:
+		case goe:
+		case equal:
+		case notequal:
+		case id:{
+			if(top(stack) == slesser){
+				pop(stack);
+				item = top(stack);
+				push(stack,nonterminal);
+				return item;
+			
+			}
+			else{
+				result = SYNTAX_ERR;
+				return error;
+			}
+		}
+		case lc:{
+			result = SYNTAX_ERR;
+			return error;
+		}
+		case rc:{
+			if(top(stack)==nonterminal){
+				pop(stack);
+				if(top(stack)==lc){
+					pop(stack);
+					pop(stack);
+					item = top(stack);
+					push(stack, nonterminal);
+					return item;
+				}
+				else{
+					tramtadadaa = nonterminal;
+					return reduction(stack);
+				}
+			}
+
+
+		}
+		case dolar:
+		case slesser:
+		case nonterminal:{
+			tramtadadaa = nonterminal;
+			return reduction(stack);
+		}
+		case error:
+		default:{}
+	
+	}
+
+	result = SYNTAX_ERR;
+	return error;
+
+}
+
+
+
+
+int precedence(tToken *token){
+	stack s1;			// zasobnik pro ukladani terminalu a neterminalu
+
+	tableEntries row;		// symbol na zasobniku (determinál)
+	tableEntries col;		// symbol na vstupu
+
+	stackInit(&s1);		// inicializace
+
+	row = dolar;
+	push(&s1, row);
+
+	do{
+		col = getIndex(token);
+		if(col == error)
+			return SYNTAX_ERR;
+		//printf("***********************\n");
+
+
+		switch (precedenceTable[row][col]){
+
+		case B:{
+				   	freeStack(&s1);			// pokud je v tabulce prazdno, jedna se o syntaktickou chybu
+					return SYNTAX_ERR;
+		}
+
+		case G:{    
+					//printf("před\t%d %d\n",row, col );
+					//printStack(&s1);
+					row = reduction(&s1);
+					//printf("po:\t%d %d\n",row, col );
+					//printStack(&s1);
+					if(row == error)
+						return SYNTAX_ERR;
+					break;
+		}
+		case L:{	
+					//printf("před:\t%d %d\n",row, col );
+					//printStack(&s1);
+					*token = tGetToken();
+					if (token->state == T_ERR)
+						return LEX_ERR;
+					if(top(&s1) == nonterminal){
+						//printf("L if\n");
+						pop(&s1);
+				   		push(&s1, slesser);
+				   		push(&s1, nonterminal);
+				   		push(&s1, col);
+				   		row = col;
+				   		//printf("po:\t%d %d\n",row, col );
+						//printStack(&s1);
+				   		break;
+					}
+					else{
+						//printf("L else\n");
+					 	push(&s1, slesser);
+						push(&s1, col);
+						row = col;
+						//printf("po:\t%d %d\n",row, col );
+						//printStack(&s1);
+						break;
+					}
+
+		}
+
+		case E:{
+				push(&s1,col);
+				row = col;
+				*token = tGetToken();
+				if (token->state == T_ERR)
+					return LEX_ERR;
+			}
+		}
+
+	} while (row != dolar || col != dolar);
+	printf("jsme venku! %d\n",result);
 
 	
 
-	printf("%d\n", col.entry);
-
+	freeStack(&s1);
 	return result;
 }

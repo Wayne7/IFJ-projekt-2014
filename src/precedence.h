@@ -33,15 +33,13 @@ typedef enum{
 	dolar,
 	slesser,
 	nonterminal,
-	error
+	error,
+	nula
 }tableEntries;
 
 
 /* Data ulozena do prvku zasobniku */
-typedef struct{
-
-	tableEntries entry;
-}tableData;
+typedef tableEntries tableData;
 
 
 /* Prvek zasobniku */
