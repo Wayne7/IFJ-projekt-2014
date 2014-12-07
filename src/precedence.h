@@ -64,6 +64,23 @@ typedef struct{
 	stackItem top;
 }stack;
 
+typedef struct con{
+	char *key;
+	sType type;
+	sValue value;
+}con;
+
+
+typedef struct conItem{
+	con value;
+	struct conItem *next;
+}conItem;
+
+typedef struct conList{
+	conItem *First;
+	conItem *Last;
+}conList;
+
 extern int result;
 
 int precedence(tToken *token);

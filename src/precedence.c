@@ -2,6 +2,10 @@
 
 tableEntries tramtadadaa = nula;
 int condition = 0;
+int varcount = 0;
+conList con_list;
+name_stack s2;		// zásobník pro ukládání jmen identifikátorů
+
 
 void stackInit(stack *ptr){
 	ptr->top = NULL;
@@ -135,6 +139,50 @@ void printStack_N(name_stack *ptr){
 	
 }
 
+void conListInit(conList *ptr){
+	ptr->First = NULL;
+	ptr->Last = NULL;
+}
+
+void conListInsert(conList *ptr, con item){
+	conItem *tmp = malloc(sizeof(conItem));
+	tmp->value = item;
+	tmp->next = NULL;
+	if(ptr->First == NULL){
+		ptr->First = tmp;
+		ptr->Last = tmp;
+	}
+	ptr->Last = tmp;
+}
+
+bool conListSearch(conList *ptr, char *key, sValue *val){
+	if(!ptr)
+		return false;
+	conItem *tmp = ptr->First;
+	while(tmp){
+		if(!strcmp(tmp->value.key,key)){
+			printf("%d\n",tmp->value.value.i );
+			*val = tmp->value.value;
+			return true;
+		}
+		tmp = tmp->next;
+	}
+	return false;
+}
+
+void conListDispose(conList *ptr){
+	conItem *tmp = NULL;
+	conItem *next;
+	if(ptr)
+		tmp = ptr->First;
+	while(tmp){
+		next = tmp->next;
+		free(tmp);
+		tmp = next;
+	}
+
+}
+
  
 
 const tablePriorities precedenceTable[14][14] = {
@@ -215,8 +263,29 @@ tableEntries getIndex(tToken *token){
 		return dolar;
 	}
 
-	case T_INTEGER:
-	case T_REAL :
+	case T_INTEGER:{
+		con *item = gMalloc(sizeof(con));
+		item->key = gMalloc(sizeof(char)*10);
+		sprintf(item->key,"#_%d",varcount++);
+		item->type = tInt;
+		item->value.i = atoi(token->content);
+		printf("%d\n", atoi(token->content));
+		printf("%d\n",item->value.i );
+		conListInsert(&con_list,*item);
+		push_N(&s2, item->key);
+		return id;
+
+	}
+	case T_REAL :{
+		con *item = malloc(sizeof(con));
+		item->key = malloc(sizeof(char)*10);
+		sprintf(item->key,"#_%d",varcount++);
+		item->type = tReal;
+		item->value.r = atoi(token->content);
+		conListInsert(&con_list,*item);
+		push_N(&s2, item->key);
+		return id;
+	}
 	case T_IDENTIFICATOR : {
 		return id;
 		
@@ -495,7 +564,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack){
 
 int precedence(tToken *token){
 	stack s1;			// zasobnik pro ukladani terminalu a neterminalu
-	name_stack s2;		// zásobník pro ukládání jmen identifikátorů
+	//sValue asdf;
 
 	tableEntries row;		// symbol na zasobniku (determinál)
 	tableEntries col;		// symbol na vstupu
@@ -506,7 +575,10 @@ int precedence(tToken *token){
 	row = dolar;
 	push(&s1, row);
 
+	conListInit(&con_list);
+
 	do{
+		//conListSearch(&con_list,"#_2",&asdf);
 		col = getIndex(token);
 		if(col == error)
 			return SYNTAX_ERR;
@@ -559,8 +631,6 @@ int precedence(tToken *token){
 					}
 
 					else{
-						if(col == id)
-							push_N(&s2,token->content);
 						//printf("L else\n");
 					 	push(&s1, slesser);
 						push(&s1, col);
@@ -586,7 +656,9 @@ int precedence(tToken *token){
 	//printf("\n-----\n\n" );
 	//printStack_N(&s2);
 	//printf("\n-----\n\n" );
-	} while (row != dolar || col != dolar);printf("jsme venku! %d\n",result);
+	} while (row != dolar || col != dolar);//printf("jsme venku! %d\n",result);
+	//conListSearch(&con_list,"#_2",&asdf);
+	//printf("%d\n",asdf.i );
 
 	
 
