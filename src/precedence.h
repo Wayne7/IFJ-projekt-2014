@@ -5,6 +5,7 @@
 #include "scanner.h"
 #include "parser.h"
 #include "ial.h"
+#include "ilist.h"
 
 
 /* Priority precedencni tabulky */
@@ -41,6 +42,15 @@ typedef enum{
 /* Data ulozena do prvku zasobniku */
 typedef tableEntries tableData;
 
+typedef struct id_item
+{
+	struct id_item *ptr;
+	char* name;
+}*id_name;
+
+typedef struct{
+	id_name top;
+}name_stack;
 
 /* Prvek zasobniku */
 typedef struct sItem{

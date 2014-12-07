@@ -1,6 +1,7 @@
 #include "precedence.h"
 
 tableEntries tramtadadaa = nula;
+int condition = 0;
 
 void stackInit(stack *ptr){
 	ptr->top = NULL;
@@ -56,15 +57,85 @@ void printStack(stack *ptr){
 	while(ptr->top != NULL){
 		push(&s,top(ptr));
 		pop(ptr);
-	}printf("----------------------\n");
+	}
+	printf("--------zasobnik-------\n");
 	while(s.top != NULL){
 		push(ptr,top(&s));
-printf("%d: %d\n",i,top(&s));
+		printf("%d: %d\n",i,top(&s));
 		pop(&s);
 		i++;
-	}printf("----------------------\n");
+	}
+	printf("----------------------\n");
 	
 }
+
+void stackInit_N(name_stack *ptr){
+	ptr->top = NULL;
+}
+
+void push_N(name_stack *ptr, char* data){
+	id_name item;
+
+	if ((item = malloc(sizeof(struct id_item))) == NULL){
+		return;
+	}
+	item->name = data;
+	item->ptr = ptr->top;
+	ptr->top = item;
+}
+
+
+
+void pop_N(name_stack *ptr){
+	id_name item;
+
+	if (ptr->top != NULL){
+		item = ptr->top;
+		ptr->top = item->ptr;
+		free(item);
+	}
+}
+
+char* top_N(name_stack *ptr){
+	if (ptr->top != NULL)
+		return ptr->top->name;
+	return "\0";
+}
+
+bool stackEmpty_N(name_stack *ptr){
+	return ptr->top == NULL;
+}
+
+void freeStack_N(name_stack *ptr){
+	id_name tmp;
+
+	while (ptr->top != NULL){
+		tmp = ptr->top;
+		ptr->top = tmp->ptr;
+		free(tmp);
+	}
+}
+
+void printStack_N(name_stack *ptr){
+	int i = 0;
+	name_stack s;
+	stackInit_N(&s);
+	while(ptr->top != NULL){
+		push_N(&s,top_N(ptr));
+		pop_N(ptr);
+	}
+	printf("--------jmena--------\n");
+	while(s.top != NULL){
+		push_N(ptr,top_N(&s));
+		printf("%d: %s\n",i,top_N(&s));
+		pop_N(&s);
+		i++;
+	}
+	printf("---------------------\n");
+	
+}
+
+ 
 
 const tablePriorities precedenceTable[14][14] = {
 
@@ -139,6 +210,8 @@ tableEntries getIndex(tToken *token){
 	}
 
 	case T_SEMICOLON:{
+		if(condition)
+			return error;
 		return dolar;
 	}
 
@@ -148,9 +221,15 @@ tableEntries getIndex(tToken *token){
 		return id;
 		
 	}
+	case T_KEYWORD:{
+		if(condition && strcmp(token->content,"then")!=0)
+			return dolar;
+		return error;
+	}
+
 
 	default:{
-printf("Unexcepted symbol\n");
+		printf("Unexcepted symbol\n");
 		return error;
 	}
 
@@ -159,9 +238,10 @@ printf("Unexcepted symbol\n");
 }
 
 
-tableEntries reduction(stack *stack){
+tableEntries reduction(stack *stack, name_stack *n_stack){
 	tableEntries tmp;	//pomocná proměnná
 	tableEntries item;	// návratová hodnota
+	
 
 	tmp = top(stack);
 	pop(stack);
@@ -171,11 +251,18 @@ tableEntries reduction(stack *stack){
 			if(tramtadadaa == nonterminal){
 				tramtadadaa = nula;
 				if(top(stack) == nonterminal){
+
 					pop(stack);
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-			printf("mul\n");
+					printf("mul\n");
+					// tmp = top(n_stack);
+					pop_N(n_stack);
+					// instListInsert(&inst_list_global,createInst(I_MUL, top_N(n_stack), tmp));
+					pop_N(n_stack);
+					// push_N()
+
 					return item;
 				}
 				else{
@@ -191,11 +278,15 @@ tableEntries reduction(stack *stack){
 			if(tramtadadaa == nonterminal){
 				tramtadadaa = nula;
 				if(top(stack) == nonterminal){
+					pop_N(n_stack);
+					pop_N(n_stack);
 					pop(stack);
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-			printf("div\n");
+					printf("div\n");
+					// push_N podíl
+
 					return item;
 				}
 				else{
@@ -211,11 +302,15 @@ tableEntries reduction(stack *stack){
 			if(tramtadadaa == nonterminal){
 				tramtadadaa = nula;
 				if(top(stack) == nonterminal){
+					pop_N(n_stack);
+					pop_N(n_stack);
 					pop(stack);
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-			printf("plus\n");
+					printf("plus\n");
+					// push_N součet
+
 					return item;
 				}
 				else{
@@ -231,11 +326,15 @@ tableEntries reduction(stack *stack){
 			if(tramtadadaa == nonterminal){
 				tramtadadaa = nula;
 				if(top(stack) == nonterminal){
+					pop_N(n_stack);
+					pop_N(n_stack);
 					pop(stack);
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-			printf("minus\n");
+					printf("minus\n");
+					// push_N rozdíl
+
 					return item;
 				}
 				else{
@@ -249,7 +348,10 @@ tableEntries reduction(stack *stack){
 
 		case lesser:{
 			if(tramtadadaa == nonterminal){
-		printf("porovnání");
+				pop_N(n_stack);
+				pop_N(n_stack);
+				printf("porovnání");
+				// push_N výsledek porovnání
 				pop(stack);
 				item = top(stack);
 				push(stack, nonterminal);
@@ -261,7 +363,10 @@ tableEntries reduction(stack *stack){
 		
 		case greater:{
 			if(tramtadadaa == nonterminal){
-		printf("porovnání");
+				pop_N(n_stack);
+				pop_N(n_stack);
+				printf("porovnání");
+				// push_N výsledek porovnání
 				pop(stack);
 				item = top(stack);
 				push(stack, nonterminal);
@@ -273,7 +378,10 @@ tableEntries reduction(stack *stack){
 		
 		case loe:{
 			if(tramtadadaa == nonterminal){
-		printf("porovnání");
+				pop_N(n_stack);
+				pop_N(n_stack);
+				printf("porovnání");
+				// push_N výsledek porovnání
 				pop(stack);
 				item = top(stack);
 				push(stack, nonterminal);
@@ -285,7 +393,10 @@ tableEntries reduction(stack *stack){
 		
 		case goe:{
 			if(tramtadadaa == nonterminal){
-		printf("porovnání");
+				pop_N(n_stack);
+				pop_N(n_stack);
+				printf("porovnání");
+				// push_N výsledek porovnání
 				pop(stack);
 				item = top(stack);
 				push(stack, nonterminal);
@@ -297,7 +408,10 @@ tableEntries reduction(stack *stack){
 		
 		case equal:{
 			if(tramtadadaa == nonterminal){
-		printf("porovnání");
+				pop_N(n_stack);
+				pop_N(n_stack);
+				printf("porovnání");
+				// push_N výsledek porovnání
 				pop(stack);
 				item = top(stack);
 				push(stack, nonterminal);
@@ -309,7 +423,10 @@ tableEntries reduction(stack *stack){
 
 		case notequal:{
 			if(tramtadadaa == nonterminal){
-		printf("porovnání");
+				pop_N(n_stack);
+				pop_N(n_stack);
+				printf("porovnání");
+				// push_N výsledek porovnání
 				pop(stack);
 				item = top(stack);
 				push(stack, nonterminal);
@@ -345,7 +462,7 @@ tableEntries reduction(stack *stack){
 				}
 				else{
 					tramtadadaa = nonterminal;
-					return reduction(stack);
+					return reduction(stack,n_stack);
 				}
 			}
 
@@ -354,7 +471,7 @@ tableEntries reduction(stack *stack){
 
 		case nonterminal:{
 			tramtadadaa = nonterminal;
-			return reduction(stack);
+			return reduction(stack,n_stack);
 		}
 		case lc:
 		case error:
@@ -378,11 +495,13 @@ tableEntries reduction(stack *stack){
 
 int precedence(tToken *token){
 	stack s1;			// zasobnik pro ukladani terminalu a neterminalu
+	name_stack s2;		// zásobník pro ukládání jmen identifikátorů
 
 	tableEntries row;		// symbol na zasobniku (determinál)
 	tableEntries col;		// symbol na vstupu
 
 	stackInit(&s1);		// inicializace
+	stackInit_N(&s2);
 
 	row = dolar;
 	push(&s1, row);
@@ -402,56 +521,61 @@ int precedence(tToken *token){
 		}
 
 		case G:{    						// Greater --> redukce
+					//printf("---------redukce---------\n");
 					//printf("před\t%d %d\n",row, col );
 					//printStack(&s1);
-					row = reduction(&s1);
+					row = reduction(&s1, &s2);
 					//printf("po:\t%d %d\n",row, col );
 					//printStack(&s1);
-					if(row == error)
+					if(row == error){
+						//printf("chyba!\n");
 						return SYNTAX_ERR;
+					}
 					break;
 		}
 		case L:{							// Lesser --> < push 
 					//printf("před:\t%d %d\n",row, col );
 					//printStack(&s1);
-					*token = tGetToken();
-					if (token->state == T_ERR)
-						return LEX_ERR;
 
 					if(top(&s1) == nonterminal){
+
 						if(col >= 4 && col <= 9){
 							//printf("L if %d\n",col);
 							push(&s1, col);
 							row = col;
 							//printf("po:\t%d %d\n",row, col );
 							//printStack(&s1);
-							break;
 						}
-						//printf("L else if\n");
-						pop(&s1);
-				   		push(&s1, slesser);
-				   		push(&s1, nonterminal);
-				   		push(&s1, col);
-				   		row = col;
-				   		//printf("po:\t%d %d\n",row, col );
-						//printStack(&s1);
-				   		break;
+						else{
+							//printf("L else if\n");
+							pop(&s1);
+					   		push(&s1, slesser);
+					   		push(&s1, nonterminal);
+					   		push(&s1, col);
+					   		row = col;
+					   		//printf("po:\t%d %d\n",row, col );
+							//printStack(&s1);
+				   		}
 					}
 
 					else{
+						if(col == id)
+							push_N(&s2,token->content);
 						//printf("L else\n");
 					 	push(&s1, slesser);
 						push(&s1, col);
 						row = col;
 						//printf("po:\t%d %d\n",row, col );
 						//printStack(&s1);
-						break;
 					}
+					*token = tGetToken();
+					if (token->state == T_ERR)
+						return LEX_ERR;
+					break;
 
 		}
 
 		case E:{
-				//printf("E kur\n");
 				push(&s1,col);
 				row = col;
 				*token = tGetToken();
@@ -459,7 +583,9 @@ int precedence(tToken *token){
 					return LEX_ERR;
 			}
 		}
-
+	//printf("\n-----\n\n" );
+	//printStack_N(&s2);
+	//printf("\n-----\n\n" );
 	} while (row != dolar || col != dolar);printf("jsme venku! %d\n",result);
 
 	
