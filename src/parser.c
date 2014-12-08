@@ -28,8 +28,299 @@ int checkFunctions(symbolTablePtr *symbolTable){			// funkce ktera projde tabulk
 	return SYNTAX_OK;
 }
 
+int write(tToken *token, symbolTablePtr *symbolTable){
+
+
+}
+
+
 int statement(tToken *token, symbolTablePtr *symbolTable){
 
+	switch (token->state){
+
+	case T_IDENTIFICATOR:{
+							 symbolTablePtr tmp = NULL;
+
+							 if ((BTSearch(symbolTable, token->content)) == NULL){
+								 return SEM_ERR;
+							 }
+
+							 *token = tGetToken();
+							 if (token->state == T_ERR){
+								 return LEX_ERR;
+							 }
+							 if (token->state != T_ASSIGN){
+								 return LEX_ERR;
+							 }
+							 *token = tGetToken();
+							 if (token->state == T_ERR){
+								 return LEX_ERR;
+							 }
+
+							 if (token->state == T_IDENTIFICATOR){
+								if ((tmp = BTSearch(symbolTable, token->content)) == NULL){
+									 return SEM_ERR;
+								}
+							 }
+							 // pokud do promenne prirazuji vysledek funkce
+							 if (tmp != NULL && tmp->content.isFunction){			// !!!! rizikova podminka
+								 printf("debil\n");
+
+
+								 //doplnit volani fce
+
+
+								 *token = tGetToken();
+								 if (token->state == T_ERR){
+									 return LEX_ERR;
+								 }
+								 result = statement(token, symbolTable);
+								 if (result != SYNTAX_OK)
+									 return result;
+							 }
+							 // jinak se provede vyhodnoceni vyrazu
+							 else{
+								 condition = ASSIGN;
+								 result = precedence(token);
+								 if (result != SYNTAX_OK)
+									 return result;
+
+								 if (token->state != T_SEMICOLON){
+									 return SYNTAX_ERR;
+								}
+
+								*token = tGetToken();
+								if (token->state == T_ERR){
+									 return LEX_ERR;
+								}
+								result = statement(token, symbolTable);
+								if (result != SYNTAX_OK)
+									 return result;
+								}
+							break;
+
+	}
+	case T_KEYWORD:{
+					   if (!strcmp(token->content, "if\0")){
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   condition = CONDITION;
+						   result = precedence(token);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "then\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "begin\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+						   result = statement(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "end\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "else\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "begin\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+						   result = statement(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "end\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+					   }
+					   if (!strcmp(token->content, "while\0")){
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   condition = WHILE;
+						   result = precedence(token);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "do\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "begin\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+						   result = statement(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "end\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+					   }
+					   if (!strcmp(token->content, "begin\0")){
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   result = statement(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   if (token->state != T_KEYWORD){
+							   return SYNTAX_ERR;
+						   }
+						   if (strcmp(token->content, "end\0") != 0){
+							   return SYNTAX_ERR;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+
+					   }
+					   if (!strcmp(token->content, "readln\0")){
+						   symbolTablePtr sym = NULL;
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_LC){
+							   return SYNTAX_ERR;
+						   }
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_IDENTIFICATOR){
+							   return SEM_ERR2;
+						   }
+						   // podivam se do tabulky symbolu, zda promenna jiz byla deklarovana
+						   if ((sym = BTSearch(symbolTable, token->content)) == NULL){
+							   result = SEM_ERR;
+							   return result;
+						   }
+						   // pokud promenna je typu boolean -> chybovy stav 4
+						   if (sym->content.type == tBool){
+							   result = SEM_ERR2;
+							   return result;
+						   }
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_RC){
+							   return SYNTAX_ERR;
+						   }
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_SEMICOLON){
+							   return SYNTAX_ERR;
+						   }
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   result = statement(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+					   }
+	}
+
+
+
+	}
+
+	return result;
 }
 
 
@@ -43,19 +334,17 @@ int body(tToken *token, symbolTablePtr *symbolTable){
 		return SYNTAX_ERR;
 	}
 
-	/**token = tGetToken();
-	if (token->state == T_ERR){
-		return LEX_ERR;
-	}
-
-	result = precedence(token);*/
-	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU HLAVNIHO TELA PROGRAMU
-
-
 	*token = tGetToken();
 	if (token->state == T_ERR){
 		return LEX_ERR;
 	}
+	
+	result = statement(token, symbolTable);
+	if (result != SYNTAX_OK)
+		return result;
+	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU HLAVNIHO TELA PROGRAMU
+
+	
 	if (token->state != T_KEYWORD){
 		return SYNTAX_ERR;
 	}
@@ -552,6 +841,9 @@ int globalListNext(tToken *token, symbolTablePtr *symbolTable){
 	symbol tmp;
 	tmp.key = token->content;
 	tmp.isFunction = false;
+	tmp.isDefined = false;
+	tmp.params = NULL;
+	tmp.symbolTable = NULL;
 
 	*token = tGetToken();
 	if (token->state == T_ERR){
@@ -600,6 +892,9 @@ int globalList(tToken *token, symbolTablePtr *symbolTable){
 	symbol tmp;					
 	tmp.key = token->content;
 	tmp.isFunction = false;
+	tmp.isDefined = false;
+	tmp.params = NULL;
+	tmp.symbolTable = NULL;
 
 	*token = tGetToken();
 	if (token->state == T_ERR){

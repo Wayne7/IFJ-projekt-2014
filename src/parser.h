@@ -21,6 +21,7 @@
 #define INT_ERR 99		// interni chyba, neovlivnena programem, napriklad spatne parametry, neuspech alokace pameti, ...
 
 
+extern int condition;
 
 int parse(symbolTablePtr *symbolTable);
 int varType(tToken *token, symbolTablePtr *symbolTable, symbol *s);
