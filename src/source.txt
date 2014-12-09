@@ -1,1 +1,25 @@
-'Ahoj'#010'Sve''te'#255''
+var 
+a : real;
+
+
+function froge ( pes : string) : real; forward;
+
+function froge ( pes : string) : real;
+var
+pess : string;
+lokomotiva : boolean;
+motorka : real;
+
+begin
+
+pess := 5;
+
+end;
+
+
+begin 
+
+
+
+
+end.

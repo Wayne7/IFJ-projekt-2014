@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 		return 99;
 	}
 
-		/*symbolTablePtr symbolTable;
+		symbolTablePtr symbolTable;
 		BTInit(&symbolTable);
 
 		result = parse(&symbolTable);
@@ -43,19 +43,12 @@ int main(int argc, char** argv){
 			printf("OK!\n");
 	
 		tInstList list;
-		instListInit(&list);*/
-
-	tToken token;
-	tInitToken(&token);
-	token = tGetToken();
-
-	printf("%d\n", token.state);
-	printf("%s\n", token.content);
+		instListInit(&list);
 
 	gFree();
 	printf("memory leaks: %d\n", _CrtDumpMemoryLeaks());
 	
 	fclose(file);
 
-	return 0;
+	return result;
 }

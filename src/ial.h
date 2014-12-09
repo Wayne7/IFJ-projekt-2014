@@ -1,11 +1,16 @@
 #ifndef _IAL
 #define _IAL
 
+#include "garbage_collector.h"
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 
 #define BT_OK 0
 #define BT_ERR 1
+
+struct BTree;
 
 typedef union {
 	int i;
@@ -27,10 +32,11 @@ typedef struct{
 	sType type;
 }sParam;
 
+
 typedef struct params{
 	sParam param;
 	struct params *ptr;
-}sParams;
+}*sParams;
 
 typedef struct Symbol{
 	char *key;
@@ -38,7 +44,7 @@ typedef struct Symbol{
 	sParams params;
 	bool isFunction;
 	bool isDefined;
-	//symbolTablePtr symbolTable;		// lokalni tabulka symbolu pro funkce
+	struct BTree *symbolTable;		// lokalni tabulka symbolu pro funkce
 
 }symbol, *symbolPtr;
 
@@ -56,5 +62,13 @@ void STInit(symbolTablePtr *root);
 void BTInit(symbolTablePtr *root);
 int BTInsert(symbolTablePtr *root, char *key, symbol s);
 symbolTablePtr BTSearch(symbolTablePtr *root, char *key);
+
+int length(char *str);
+char *copy(char* str, int position, int count);
+void prefix(char* s, int search_size, int *arr);
+int find(char *s, char *search);
+void Merge(char *array, int left, int mid, int right);
+void MergeSort(char *array, int left, int right);
+char* sort(char * s);
 
 #endif
