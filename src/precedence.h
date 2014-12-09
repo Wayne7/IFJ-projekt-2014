@@ -8,6 +8,10 @@
 #include "ilist.h"
 
 
+#define ASSIGN 0
+#define CONDITION 1
+#define WHILE 2
+
 /* Priority precedencni tabulky */
 typedef enum {
 	G,		// Greater
@@ -37,6 +41,8 @@ typedef enum{
 	error,
 	nula
 }tableEntries;
+
+
 
 
 /* Data ulozena do prvku zasobniku */
@@ -83,6 +89,8 @@ typedef struct conList{
 
 extern int result;
 
-int precedence(tToken *token);
+
+
+int precedence(tToken *token,symbolTablePtr *symbolTable);
 
 #endif
