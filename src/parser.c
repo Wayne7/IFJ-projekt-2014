@@ -1,7 +1,9 @@
 #include "parser.h"
 
 int result;			// globalni promenna pro kontrolu chyb
-sParams paramsTmp = NULL;	// globalni promenna ve ktere uchovavam odkaz na parametr
+sParams paramsTmp = NULL;	// globalni promenna, ve ktere uchovavam odkaz na parametr
+int function = 0;			// globalni promenna pro kontrolu, zda se nachazime v tele funkce nebo programu
+symbolTablePtr func = NULL;	// globalni promenna, ve ktere uchovavam odkaz na aktualni funkci
 
 
 int checkFunctions(symbolTablePtr *symbolTable){			// funkce ktera projde tabulkou symbolu a zjisti, zda se tam nenachazi funkce ktera byla deklarovana, ale nebyla definovana
@@ -29,8 +31,64 @@ int checkFunctions(symbolTablePtr *symbolTable){			// funkce ktera projde tabulk
 }
 
 int write(tToken *token, symbolTablePtr *symbolTable){
+	symbolTablePtr tmp;
 
+	if (token->state != T_STRING && token->state != T_IDENTIFICATOR){
+		result = SEM_ERR2;
+		return result;
+	}
 
+	if (token->state == T_IDENTIFICATOR){
+		if (function == 1){
+			if ((tmp = BTSearch(&func->content.symbolTable, token->content)) == NULL){
+				if ((tmp = BTSearch(symbolTable, token->content)) == NULL){
+					return SEM_ERR;
+				}
+			}
+		}
+
+		else{
+			if ((tmp = BTSearch(symbolTable, token->content)) == NULL){
+				return SEM_ERR;
+			}
+		}
+		if (tmp->content.isFunction){
+			result = SEM_ERR2;
+			return result;
+		}
+
+	}
+
+	// dodelat
+
+	*token = tGetToken();
+	if (token->state == T_ERR){
+		return LEX_ERR;
+	}
+	if (token->state == T_COMMA){
+		*token = tGetToken();
+		if (token->state == T_ERR){
+			return LEX_ERR;
+		}
+		result = write(token, symbolTable);
+		if (result != SYNTAX_OK)
+			return result;
+	}
+	else if (token->state = T_RC){
+		*token = tGetToken();
+		if (token->state == T_ERR){
+			return LEX_ERR;
+		}
+		if (token->state != T_SEMICOLON){
+			result = SYNTAX_ERR;
+			return result;
+		}
+	}
+	else{
+		return SYNTAX_ERR;
+	}
+
+	return result;
 }
 
 
@@ -40,9 +98,20 @@ int statement(tToken *token, symbolTablePtr *symbolTable){
 
 	case T_IDENTIFICATOR:{
 							 symbolTablePtr tmp = NULL;
+							 symbolTablePtr tmp2 = NULL;
 
-							 if ((BTSearch(symbolTable, token->content)) == NULL){
-								 return SEM_ERR;
+							 if (function == 1){	
+								 if ((tmp2 = BTSearch(&func->content.symbolTable, token->content)) == NULL){
+									 if ((tmp2 = BTSearch(symbolTable, token->content)) == NULL){
+										 return SEM_ERR;
+									 }
+								 }
+							 }
+							 
+							 else{
+								 if ((tmp2 = BTSearch(symbolTable, token->content)) == NULL){
+									 return SEM_ERR;
+								 }
 							 }
 
 							 *token = tGetToken();
@@ -64,11 +133,11 @@ int statement(tToken *token, symbolTablePtr *symbolTable){
 							 }
 							 // pokud do promenne prirazuji vysledek funkce
 							 if (tmp != NULL && tmp->content.isFunction){			// !!!! rizikova podminka
-								 printf("debil\n");
-
-
-								 //doplnit volani fce
-
+								 // pokud nesedi typy -> semanticka chyba
+								 if (tmp2->content.type != tmp->content.type){
+									 result = SEM_ERR2;
+									 return result;
+								 }
 
 								 *token = tGetToken();
 								 if (token->state == T_ERR){
@@ -80,6 +149,10 @@ int statement(tToken *token, symbolTablePtr *symbolTable){
 							 }
 							 // jinak se provede vyhodnoceni vyrazu
 							 else{
+								 if (tmp2->content.isFunction){
+									 result = SEM_ERR;
+									 return result;				// zkontrolovat navratovou hodnotu
+								 }
 								 condition = ASSIGN;
 								 result = precedence(token);
 								 if (result != SYNTAX_OK)
@@ -314,12 +387,38 @@ int statement(tToken *token, symbolTablePtr *symbolTable){
 							   return result;
 
 					   }
+					   if (!strcmp(token->content, "write\0")){
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   if (token->state != T_LC){
+							   return SYNTAX_ERR;
+						   }
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   result = write(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+						   *token = tGetToken();
+						   if (token->state == T_ERR){
+							   return LEX_ERR;
+						   }
+						   result = statement(token, symbolTable);
+						   if (result != SYNTAX_OK)
+							   return result;
+
+					   }
+					   break;
 	}
 
 
 
 	}
-
+	func = NULL;
 	return result;
 }
 
@@ -338,11 +437,11 @@ int body(tToken *token, symbolTablePtr *symbolTable){
 	if (token->state == T_ERR){
 		return LEX_ERR;
 	}
-	
+	function = 0;
 	result = statement(token, symbolTable);
 	if (result != SYNTAX_OK)
 		return result;
-	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU HLAVNIHO TELA PROGRAMU
+
 
 	
 	if (token->state != T_KEYWORD){
@@ -384,12 +483,14 @@ int funcStatement(tToken *token, symbolTablePtr *symbolTable){
 
 	}
 
-	// ZDE SE ZAVOLA FUNKCE PRO ANALYZU TELA FUNKCE
-
 	*token = tGetToken();
 	if (token->state == T_ERR){
 		return LEX_ERR;
 	}
+	function = 1;
+	result = statement(token, symbolTable);
+	if (result != SYNTAX_OK)
+		return result;
 
 	if (token->state != T_KEYWORD){
 		return SYNTAX_ERR;
@@ -770,6 +871,14 @@ int defFunction(tToken *token, symbolTablePtr *symbolTable){
 			if (result != SYNTAX_OK)
 				return result;
 
+
+			if (test == NULL){
+				func = BTSearch(symbolTable, tmp.key);			// do globalni promenne ulozim odkaz na aktualni funkci
+			}
+			else{
+				func = test;
+			}
+
 			result = funcStatement(token, symbolTable);
 			if (result != SYNTAX_OK)
 				return result;
@@ -798,6 +907,7 @@ int defFunction(tToken *token, symbolTablePtr *symbolTable){
 		return SYNTAX_ERR;
 	}
 	
+
 	return result;
 }
 
