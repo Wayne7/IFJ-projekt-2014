@@ -1,25 +1,17 @@
 var 
-a : real;
+a: integer;
 
+function doge () : string; forward;
 
-function froge ( pes : string) : real; forward;
-
-function froge ( pes : string) : real;
-var
-pess : string;
-lokomotiva : boolean;
-motorka : real;
+function doge () : string;
+var vitecek : string;
 
 begin
 
-pess := 5;
+vitecek := 5 < 4 ;
 
 end;
 
-
 begin 
-
-
-
 
 end.

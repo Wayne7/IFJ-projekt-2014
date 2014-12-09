@@ -2,17 +2,16 @@
 #define _PRECEDENCE
 
 #include <stdio.h>
+#include "garbage_collector.h"
 #include "scanner.h"
-#include "parser.h"
+#include "tmp.h"
 #include "ial.h"
 #include "ilist.h"
+
 
 #define ASSIGN 0
 #define CONDITION 1
 #define WHILE 2
-
-int condition;
-
 
 /* Priority precedencni tabulky */
 typedef enum {
@@ -45,6 +44,8 @@ typedef enum{
 }tableEntries;
 
 
+
+
 /* Data ulozena do prvku zasobniku */
 typedef tableEntries tableData;
 
@@ -70,25 +71,10 @@ typedef struct{
 	stackItem top;
 }stack;
 
-typedef struct con{
-	char *key;
-	sType type;
-	sValue value;
-}con;
-
-
-typedef struct conItem{
-	con value;
-	struct conItem *next;
-}conItem;
-
-typedef struct conList{
-	conItem *First;
-	conItem *Last;
-}conList;
-
 extern int result;
 
-int precedence(tToken *token);
+extern tInstList inst_list_global;
+
+int precedence(tToken *token,symbolTablePtr *symbolTable);
 
 #endif
