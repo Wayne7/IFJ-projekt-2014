@@ -27,6 +27,14 @@ typedef enum{
 	I_SORT,
 	I_COPY,
 	I_FIND,
+	I_READLN,
+	I_WRITE,
+
+	I_ASSIGN,
+
+	I_IF,
+	I_ELSE,
+	I_END
 
 	// a tak dale
 }tInstType;
@@ -56,6 +64,7 @@ void instListSucc(tInstList *list);
 void instListInsert(tInstList *list, tInst inst);
 tInst createInst(tInstType type, void* addr1, void* addr2, void* addr3);
 void instListPrint(tInstList *list);
+void instListSkip(tInstList *list);
 
 
 #endif

@@ -2,6 +2,7 @@
 #define _IAL
 
 #include "garbage_collector.h"
+#include "ilist.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@ typedef struct Symbol{
 	bool isFunction;
 	bool isDefined;
 	struct BTree *symbolTable;		// lokalni tabulka symbolu pro funkce
+	tInstList lInstList;
 
 }symbol, *symbolPtr;
 
@@ -58,11 +60,15 @@ typedef struct BTree{
 
 }*symbolTablePtr;
 
-
+int BTInsert_(symbolTablePtr *root, char *key, symbol s);
+symbolTablePtr BTSearch_(symbolTablePtr *root, char *key);
 void STInit(symbolTablePtr *root);
 void BTInit(symbolTablePtr *root);
 int BTInsert(symbolTablePtr *root, char *key, symbol s);
 symbolTablePtr BTSearch(symbolTablePtr *root, char *key);
+void BTPrint(symbolTablePtr *root);
+extern symbolTablePtr func;
+extern int function;
 
 int length(char *str);
 char *copy(char* str, int position, int count);

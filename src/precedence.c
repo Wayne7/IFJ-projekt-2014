@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "precedence.h"
 
 tableEntries entry = nula;
@@ -123,6 +122,7 @@ void freeStack_N(name_stack *ptr){
 }
 
 void printStack_N(name_stack *ptr){
+	printf("%p\n", ans);
 	if(!ptr->top)
 		return;
 	int i = 0;
@@ -231,10 +231,11 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		item->key = gMalloc(sizeof(char)*10);
 		sprintf(item->key,"#_%d",varcount++);
 		item->type = tInt;
+		item->isDefined = true;
 		item->value.i = strtol(token->content,NULL,0);
 		result = BTInsert(symbolTable,item->key, *item);
 		ans = BTSearch(symbolTable, item->key);
-		printf("identifikátor %d\n", ans->content.value.i);
+		//printf("identifikátor %d\n", ans->content.value.i);
 		push_N(&s2, item->key);
 		return id;
 	}
@@ -244,6 +245,7 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		item->key = gMalloc(sizeof(char)*10);
 		sprintf(item->key,"#_%d",varcount++);
 		item->type = tReal;
+		item->isDefined = true;
 		item->value.r = strtod(token->content,NULL);
 		result = BTInsert(symbolTable,item->key, *item);
 		ans = BTSearch(symbolTable, item->key);
@@ -256,6 +258,7 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		item->key = gMalloc(sizeof(char)*10);
 		sprintf(item->key,"#_%d",varcount++);
 		item->type = tString;
+		item->isDefined = true;
 		item->value.s = token->content;
 		result = BTInsert(symbolTable,item->key, *item);
 		ans = BTSearch(symbolTable, item->key);
@@ -263,25 +266,16 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		return id;
 	}
 
-	// case T_BOOL:{
-	// 	symbol *item = gMalloc(sizeof(symbol));
-	// 	item->key = gMalloc(sizeof(char)*10);
-	// 	sprintf(item->key,"#_%d",varcount++);
-	// 	item->type = tBool;
-	// 	item->value.b = strtod(token->content,NULL);				// !!!!
-	// 	result = BTInsert(symbolTable,item->key, *item);
-	// 	ans = BTSearch(symbolTable, item->key);
-	// 	push_N(&s2, item->key);
-	// 	return id;
-	// }
-
 	case T_IDENTIFICATOR : {
-		symbolTablePtr item = BTSearch(symbolTable,token->content);
-		if(item==NULL){
+		ans = BTSearch(symbolTable,token->content);
+		if(ans==NULL){
+			result = SEM_ERR;
 			return error;
 		}
-		if(!item->content.isDefined)
+		if (ans->content.isFunction){
+			result = SEM_ERR2;
 			return error;
+		}
 		push_N(&s2,token->content);
 		return id;
 		
@@ -291,8 +285,26 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 			return dolar;
 		if(condition == 2 && (strcmp(token->content,"do")==0))
 			return dolar;
-		return error;
 
+		if (!strcmp(token->content, "true\0") || !strcmp(token->content, "false\0")){
+			symbol *item = gMalloc(sizeof(symbol));
+			item->key = gMalloc(sizeof(char)* 10);
+			sprintf(item->key, "#_%d", varcount++);
+			item->type = tBool;
+			item->isDefined = true;
+			if (!strcmp(token->content, "true\0")){
+				item->value.b = true;			
+			}
+			else{
+				item->value.b = false;
+			}
+			result = BTInsert(symbolTable, item->key, *item);
+			ans = BTSearch(symbolTable, item->key);
+			push_N(&s2, item->key);
+			return id;
+		}
+
+		return error;
 	}
 
 
@@ -339,17 +351,19 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						case tInt:{
 							if(pom2->content.type == tInt){
 								polozka->type = tInt;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
-								inst = createInst(I_MUL, pom1, pom2, (void*) ans);
+								inst = createInst(I_MUL, pom2, pom1, (void*) ans);
 								break;
 							}
 
 							if(pom2->content.type == tReal){
 								polozka->type = tReal;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
-								inst = createInst(I_MUL, pom1, pom2, (void*) ans);
+								inst = createInst(I_MUL, pom2, pom1, (void*) ans);
 								break;
 							}
 							else{
@@ -360,16 +374,17 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 						case tReal:{
 							polozka->type = tReal;
+							polozka->isDefined = true;
 							result = BTInsert(symbolTable,polozka->key, *polozka);
 						
 							if(pom2->content.type == tInt){
 								ans = BTSearch(symbolTable,polozka->key);
-								inst = createInst(I_MUL, pom1, pom2,(void*) ans);
+								inst = createInst(I_MUL, pom2, pom1,(void*) ans);
 								break;
 							}
 							if(pom2->content.type == tReal){							
 								ans = BTSearch(symbolTable,polozka->key);
-								inst = createInst(I_MUL, pom1, pom2,(void*) ans);
+								inst = createInst(I_MUL, pom2, pom1,(void*) ans);
 								break;
 							}
 							else{
@@ -388,7 +403,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 		
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 				}
 				else{
@@ -414,6 +429,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
 					sprintf(polozka->key,"#_%d",varcount++);
 					polozka->type = tReal;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
 
@@ -460,7 +476,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 				}
 				else{
@@ -493,6 +509,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						case tInt:{
 							if(pom2->content.type == tInt){
 								polozka->type = tInt;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_ADD, pom2, pom1,(void*) ans);
@@ -501,6 +518,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 							if(pom2->content.type == tReal){
 								polozka->type = tReal;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_ADD, pom2, pom1,(void*) ans);
@@ -514,6 +532,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 						case tReal:{
 							polozka->type = tReal;
+							polozka->isDefined = true;
 							result = BTInsert(symbolTable,polozka->key, *polozka);
 							
 							if(pom2->content.type == tReal){
@@ -534,8 +553,10 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						}
 
 						case tString:{
-							if(pom2->content.type == tString){
+							if(pom2->content.type == tString){		// POLOZKA UPRAVENA !!!!!
+								polozka->value.s = gMalloc(strlen(pom1->content.value.s) + strlen(pom1->content.value.s) + 1);
 								polozka->type = tString;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_CONC, pom2, pom1,(void*) ans);
@@ -556,7 +577,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 				}
 				else{
@@ -586,6 +607,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						case tInt:{
 							if(pom2->content.type == tInt){
 								polozka->type = tInt;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_SUB, pom2, pom1, (void*) ans);
@@ -594,6 +616,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 							if(pom2->content.type == tReal){
 								polozka->type = tReal;
+								polozka->isDefined = true;
 								result = BTInsert(symbolTable,polozka->key, *polozka);
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_SUB, pom2, pom1, (void*) ans);
@@ -607,6 +630,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 						case tReal:{
 							polozka->type = tReal;
+
 							result = BTInsert(symbolTable,polozka->key, *polozka);
 						
 							if(pom2->content.type == tInt){
@@ -633,7 +657,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 				}
 				else{
@@ -664,12 +688,13 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						return error;
 					}
 					polozka->type = tBool;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
-					inst = createInst(I_LESSER, pom1, pom2, (void*) ans);
+					inst = createInst(I_LESSER, pom2, pom1, (void*) ans);
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 			}
 			else
@@ -695,12 +720,13 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						return error;
 					}
 					polozka->type = tBool;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
-					inst = createInst(I_GREATER, pom1, pom2, (void*) ans);
+					inst = createInst(I_GREATER, pom2, pom1, (void*) ans);
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 			}
 			else
@@ -726,12 +752,13 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						return error;
 					}
 					polozka->type = tBool;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
-					inst = createInst(I_LOE, pom1, pom2,(void*) ans);
+					inst = createInst(I_LOE, pom2, pom1,(void*) ans);
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 			}
 			else
@@ -757,12 +784,13 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						return error;
 					}
 					polozka->type = tBool;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
-					inst = createInst(I_GOE, pom1, pom2,(void*) ans);
+					inst = createInst(I_GOE, pom2, pom1,(void*) ans);
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 			}
 			else
@@ -788,12 +816,13 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						return error;
 					}
 					polozka->type = tBool;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
-					inst = createInst(I_EQUAL, pom1, pom2,(void*) ans);
+					inst = createInst(I_EQUAL, pom2, pom1,(void*) ans);
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 			}
 			else{
@@ -821,12 +850,13 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}					
 					sprintf(polozka->key,"#_%d",varcount++);
 					polozka->type = tBool;
+					polozka->isDefined = true;
 					result = BTInsert(symbolTable,polozka->key, *polozka);
 					ans = BTSearch(symbolTable,polozka->key);
-					inst = createInst(I_NOTEQUAL, pom1, pom2, (void*) ans);
+					inst = createInst(I_NOTEQUAL, pom2, pom1, (void*) ans);
 					pop_N(n_stack);
 					push_N(&s2, polozka->key);
-					instListInsert(&inst_list_global,inst);
+					instListInsert(inst_list_global,inst);
 					return item;
 			}
 			else{
@@ -911,8 +941,11 @@ int precedence(tToken *token, symbolTablePtr *symbolTable){
 		//conListSearch(&con_list,"#_2",&asdf);
 		col = getIndex(token, symbolTable);
 		//printf("%d",result);
-		if(col == error)
+		if (col == error){
+			freeStack(&s1);										   	
+			freeStack_N(&s2);
 			return result;
+		}
 
 		//printf("***********************\n");
 
@@ -998,11 +1031,11 @@ int precedence(tToken *token, symbolTablePtr *symbolTable){
 	//printStack_N(&s2);
 	//printf("\n-----\n\n" );
 	} while (row != dolar || col != dolar);
-	printf("jsme venku! %d\n",result);
+	//printf("jsme venku! %d\n",result);
 	//conListSearch(&con_list,"#_2",&asdf);
 	//printf("%d\n",asdf.i );
 	//conListPrint(&con_list);
-	//instListPrint(&inst_list_global);
+	//instListPrint(inst_list_global);
 	//BTPrint(symbolTable);
 	//printf("%p\n", ans );
 

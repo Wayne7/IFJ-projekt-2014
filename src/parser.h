@@ -6,8 +6,11 @@
 #include "ial.h"
 #include "precedence.h"
 #include "garbage_collector.h"
+#include "interpret.h"
 
 extern int condition;
+extern symbolTablePtr ans;
+extern int varcount;
 
 int parse(symbolTablePtr *symbolTable);
 int varType(tToken *token, symbolTablePtr *symbolTable, symbol *s);

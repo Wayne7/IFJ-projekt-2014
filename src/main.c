@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #define _CRTDBG_MAP_ALLOC
 
 #include "strings.h"
@@ -42,9 +41,15 @@ int main(int argc, char** argv){
 		}
 		else
 			printf("OK!\n");
-	
-		tInstList list;
-		instListInit(&list);
+
+		symbolTablePtr test = BTSearch(&symbolTable, "doge");
+
+		printf("------------LOCAL----------------\n");
+		BTPrint(&test->content.symbolTable);
+		printf("-------------GLOBAL---------------\n");
+		BTPrint(&symbolTable);
+		printf("----------------------------\n");
+
 
 	gFree();
 	printf("memory leaks: %d\n", _CrtDumpMemoryLeaks());

@@ -1,19 +1,35 @@
 #include "ial.h"
-#include "garbage_collector.h"
 #include <string.h>
 
 /*
 *	Implementace binarniho stromu prevzata z druhe domaci ulohy do predmetu IAL
 */
 
+
 int BTInsert(symbolTablePtr *root, char *key, symbol s){
+
+	if(function){	
+		if(BTSearch_(&(func->content.symbolTable),key) != NULL)
+			return BT_ERR;
+		return BTInsert_(&(func->content.symbolTable), key, s);
+	}
+	else
+		return BTInsert_(root,key,s);
+
+
+}
+
+
+
+
+int BTInsert_(symbolTablePtr *root, char *key, symbol s){
 	if (*root == NULL){
 		symbolTablePtr tmp;
 
 		if ((tmp = gMalloc(sizeof(struct BTree))) == NULL){
 			return BT_ERR;
 		}
-
+		printf("\n%p\n",tmp );
 		tmp->key = key;
 		tmp->content = s;
 		tmp->LPtr = NULL;
@@ -27,10 +43,10 @@ int BTInsert(symbolTablePtr *root, char *key, symbol s){
 		int cmp = strcmp((*root)->key, key);
 
 		if (cmp < 0){
-			return BTInsert(&(*root)->LPtr, key, s);
+			return BTInsert_(&(*root)->LPtr, key, s);
 		}
 		if (cmp > 0){
-			return BTInsert(&(*root)->RPtr, key, s);
+			return BTInsert_(&(*root)->RPtr, key, s);
 		}
 		if (cmp == 0){
 			printf("nevim\n");
@@ -42,8 +58,20 @@ int BTInsert(symbolTablePtr *root, char *key, symbol s){
 }
 
 
-
 symbolTablePtr BTSearch(symbolTablePtr *root, char *key){
+	symbolTablePtr tmp;
+	if(function){
+		if((tmp = BTSearch_(&(func->content.symbolTable), key)) != NULL)
+			return tmp;
+	}
+
+	return BTSearch_(root,key);
+
+
+}
+
+
+symbolTablePtr BTSearch_(symbolTablePtr *root, char *key){
 	symbolTablePtr tmp;
 	tmp = *root;
 
@@ -59,10 +87,10 @@ symbolTablePtr BTSearch(symbolTablePtr *root, char *key){
 		return tmp;
 	}
 	else if (cmp < 0){
-		return BTSearch(&(*root)->LPtr, key);
+		return BTSearch_(&(*root)->LPtr, key);
 	}
 	else{
-		return BTSearch(&(*root)->RPtr, key);
+		return BTSearch_(&(*root)->RPtr, key);
 	}
 
 	return NULL;
@@ -106,6 +134,36 @@ void prefix(char* s, int search_size, int *arr){
 			arr[i] = j;
 		}
 	}
+}
+void BTPrint(symbolTablePtr *root){
+	if (*root == NULL){
+		return;
+	}
+	symbolTablePtr tmp = (*root);
+	switch (tmp->content.type){
+	case tInt:{
+				  printf("%s int: %d\n", (*root)->key, tmp->content.value.i);
+				  BTPrint(&(*root)->LPtr);
+				  break;
+	}
+	case tReal:{
+				   printf("%s real: %p\n", (*root)->key, tmp);
+				   BTPrint(&(*root)->LPtr);
+				   break;
+	}
+	case tString:{
+					 printf("%s string: %p\n", (*root)->key, tmp);
+					 BTPrint(&(*root)->LPtr);
+					 break;
+	}
+	case tBool:{
+				   printf("%s bool: %p\n", (*root)->key, tmp);
+				   BTPrint(&(*root)->LPtr);
+				   break;
+	}
+	}
+	BTPrint(&(*root)->RPtr);
+
 }
 
 

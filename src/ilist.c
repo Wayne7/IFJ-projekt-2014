@@ -1,6 +1,15 @@
 #include "ilist.h"
 
-
+void instListSkip(tInstList *list){
+	instListSucc(list);
+	tItem item = *(list->Active);
+	while (item.instruction.type != I_END){
+		instListSucc(list);
+		item = *(list->Active);
+		if (item.instruction.type == I_IF)
+			instListSkip(list);
+	}
+}
 
 
 void instListInit(tInstList *list){     //inicializace seznamu
@@ -11,8 +20,9 @@ void instListInit(tInstList *list){     //inicializace seznamu
 
 void instListSucc(tInstList *list){     //posouva aktivitu na dalsi instrukci
 	if (list->Active == NULL){
-		return;
+		list->Active = list->First;
 	}
+	else
 	list->Active = list->Active->ptr;
 }
 

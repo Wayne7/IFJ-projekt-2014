@@ -1,168 +1,507 @@
-#include <string.h>
 #include "interpret.h"
+#include <string.h>
+
+int interpr(tInstList instlist){
 
 
-void frameInit(sFrame *ptr){
-	ptr->First = NULL;
-	ptr->Last = NULL;
-}
+	while (1)
+	{
+		instListSucc(&instlist);
+		tInst tmp = instlist.Active->instruction;
 
-void frameInsert(sFrame *ptr, sVariable data){
-	sFrameItem *tmp;
 
-	if ((tmp = gMalloc(sizeof(*tmp))) == NULL){
-		result = INT_ERR;
-		return;
+		switch (tmp.type)
+		{
+		case I_STOP:
+			return 0;
+			break;
+
+		case I_ADD: {
+						if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							return SEM_ERR;
+						if (((symbolTablePtr)tmp.addr1)->content.type == tInt){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.i = ((symbolTablePtr)tmp.addr1)->content.value.i + ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.i + ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						else if (((symbolTablePtr)tmp.addr1)->content.type == tReal){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r + ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r + ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						break;
+		}
+
+		case I_SUB: {
+						if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							return SEM_ERR;
+						if (((symbolTablePtr)tmp.addr1)->content.type == tInt){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.i = ((symbolTablePtr)tmp.addr1)->content.value.i - ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.i - ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						else if (((symbolTablePtr)tmp.addr1)->content.type == tReal){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r - ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r - ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						break;
+		}
+
+		case I_MUL: {
+						if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							return SEM_ERR;
+						if (((symbolTablePtr)tmp.addr1)->content.type == tInt){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.i = ((symbolTablePtr)tmp.addr1)->content.value.i * ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.i * ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						else if (((symbolTablePtr)tmp.addr1)->content.type == tReal){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r * ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r * ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						break;
+		}
+
+		case I_DIV: {
+						if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							return SEM_ERR;
+						if (((symbolTablePtr)tmp.addr2)->content.value.i == 0)
+							return RUN_ERR3;
+						if (((symbolTablePtr)tmp.addr1)->content.type == tInt){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.i / ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.i / ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						else if (((symbolTablePtr)tmp.addr1)->content.type == tReal){
+							if (((symbolTablePtr)tmp.addr2)->content.type == tInt)
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r / ((symbolTablePtr)tmp.addr2)->content.value.i;
+							else
+								((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r / ((symbolTablePtr)tmp.addr2)->content.value.r;
+						}
+						break;
+		}
+
+		case I_CONC: {
+						 if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							 return SEM_ERR;
+
+						 ((symbolTablePtr)tmp.addr3)->content.value.s = strcat(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s);
+						 break;
+		}
+
+
+		case I_LESSER: {
+						   if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							   return SEM_ERR;
+						   if ((((symbolTablePtr)tmp.addr1)->content.type == tString) && (((symbolTablePtr)tmp.addr2)->content.type == tString)){
+							   if (strcmp(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s) < 0){
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								   printf("lesser: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+								   break;
+							   }
+							   else{
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								   break;
+							   }
+						   }
+
+						   if ((((symbolTablePtr)tmp.addr1)->content.type == tInt) && (((symbolTablePtr)tmp.addr2)->content.type == tInt)){
+							   if (((symbolTablePtr)tmp.addr1)->content.value.i < ((symbolTablePtr)tmp.addr2)->content.value.i){
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								   break;
+							   }
+							   else{
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								   break;
+							   }
+						   }
+
+						   if ((((symbolTablePtr)tmp.addr1)->content.type == tBool) && (((symbolTablePtr)tmp.addr2)->content.type == tBool)){
+							   if (((symbolTablePtr)tmp.addr1)->content.value.r < ((symbolTablePtr)tmp.addr2)->content.value.r){
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								   break;
+							   }
+							   else{
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								   break;
+							   }
+						   }
+
+						   if ((((symbolTablePtr)tmp.addr1)->content.type == tReal) && (((symbolTablePtr)tmp.addr2)->content.type == tReal)){
+							   if (((symbolTablePtr)tmp.addr1)->content.value.r < ((symbolTablePtr)tmp.addr2)->content.value.r){
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								   break;
+							   }
+							   else{
+								   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								   break;
+							   }
+						   }
+						   return SEM_ERR2;
+						   break;
+		}
+
+		case I_GREATER: {
+							if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+								return SEM_ERR;
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tString) && (((symbolTablePtr)tmp.addr2)->content.type == tString)){
+								if (strcmp(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s) > 0){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tInt) && (((symbolTablePtr)tmp.addr2)->content.type == tInt)){
+								if (((symbolTablePtr)tmp.addr1)->content.value.i > ((symbolTablePtr)tmp.addr2)->content.value.i){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tBool) && (((symbolTablePtr)tmp.addr2)->content.type == tBool)){
+								if (((symbolTablePtr)tmp.addr1)->content.value.r > ((symbolTablePtr)tmp.addr2)->content.value.r){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tReal) && (((symbolTablePtr)tmp.addr2)->content.type == tReal)){
+								if (((symbolTablePtr)tmp.addr1)->content.value.r > ((symbolTablePtr)tmp.addr2)->content.value.r){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+							return SEM_ERR2;
+
+							break;
+		}
+
+		case I_LOE: {
+						if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							return SEM_ERR;
+						if ((((symbolTablePtr)tmp.addr1)->content.type == tString) && (((symbolTablePtr)tmp.addr2)->content.type == tString)){
+							if (strcmp(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s) <= 0){
+								((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								break;
+							}
+							else{
+								((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								break;
+							}
+						}
+
+						if ((((symbolTablePtr)tmp.addr1)->content.type == tInt) && (((symbolTablePtr)tmp.addr2)->content.type == tInt)){
+							if (((symbolTablePtr)tmp.addr1)->content.value.i <= ((symbolTablePtr)tmp.addr2)->content.value.i){
+								((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								break;
+							}
+							else{
+								((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								break;
+							}
+						}
+
+						if ((((symbolTablePtr)tmp.addr1)->content.type == tBool) && (((symbolTablePtr)tmp.addr2)->content.type == tBool)){
+							if (((symbolTablePtr)tmp.addr1)->content.value.r <= ((symbolTablePtr)tmp.addr2)->content.value.r){
+								((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								break;
+							}
+							else{
+								((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								break;
+							}
+						}
+
+						if ((((symbolTablePtr)tmp.addr1)->content.type == tReal) && (((symbolTablePtr)tmp.addr2)->content.type == tReal)){
+							if (((symbolTablePtr)tmp.addr1)->content.value.r <= ((symbolTablePtr)tmp.addr2)->content.value.r){
+								((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								break;
+							}
+							else{
+								((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								break;
+							}
+						}
+						break;
+		}
+
+		case I_GOE:{
+					   if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+						   return SEM_ERR;
+					   if ((((symbolTablePtr)tmp.addr1)->content.type == tString) && (((symbolTablePtr)tmp.addr2)->content.type == tString)){
+						   if (strcmp(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s) >= 0){
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+							   break;
+						   }
+						   else{
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+							   break;
+						   }
+					   }
+
+					   if ((((symbolTablePtr)tmp.addr1)->content.type == tInt) && (((symbolTablePtr)tmp.addr2)->content.type == tInt)){
+						   if (((symbolTablePtr)tmp.addr1)->content.value.i >= ((symbolTablePtr)tmp.addr2)->content.value.i){
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+							   break;
+						   }
+						   else{
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+							   break;
+						   }
+					   }
+
+					   if ((((symbolTablePtr)tmp.addr1)->content.type == tBool) && (((symbolTablePtr)tmp.addr2)->content.type == tBool)){
+						   if (((symbolTablePtr)tmp.addr1)->content.value.r >= ((symbolTablePtr)tmp.addr2)->content.value.r){
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+							   break;
+						   }
+						   else{
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+							   break;
+						   }
+					   }
+
+					   if ((((symbolTablePtr)tmp.addr1)->content.type == tReal) && (((symbolTablePtr)tmp.addr2)->content.type == tReal)){
+						   if (((symbolTablePtr)tmp.addr1)->content.value.r >= ((symbolTablePtr)tmp.addr2)->content.value.r){
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+							   break;
+						   }
+						   else{
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+							   break;
+						   }
+					   }
+					   return SEM_ERR2;
+					   break;
+		}
+		case I_NOTEQUAL:{
+							if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+								return SEM_ERR;
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tString) && (((symbolTablePtr)tmp.addr2)->content.type == tString)){
+								if (strcmp(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s) != 0){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tInt) && (((symbolTablePtr)tmp.addr2)->content.type == tInt)){
+								if (((symbolTablePtr)tmp.addr1)->content.value.i != ((symbolTablePtr)tmp.addr2)->content.value.i){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									printf("NOTE: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									printf("NOTE: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+									break;
+								}
+							}
+
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tBool) && (((symbolTablePtr)tmp.addr2)->content.type == tBool)){
+								if (((symbolTablePtr)tmp.addr1)->content.value.r != ((symbolTablePtr)tmp.addr2)->content.value.r){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+
+							if ((((symbolTablePtr)tmp.addr1)->content.type == tReal) && (((symbolTablePtr)tmp.addr2)->content.type == tReal)){
+								if (((symbolTablePtr)tmp.addr1)->content.value.r != ((symbolTablePtr)tmp.addr2)->content.value.r){
+									((symbolTablePtr)tmp.addr3)->content.value.b = true;
+									break;
+								}
+								else{
+									((symbolTablePtr)tmp.addr3)->content.value.b = false;
+									break;
+								}
+							}
+							return SEM_ERR2;
+							break;
+		}
+
+
+		case I_EQUAL:{
+						 if (((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) || ((((symbolTablePtr)tmp.addr2)->content.isDefined) != true))
+							 return SEM_ERR;
+						 if ((((symbolTablePtr)tmp.addr1)->content.type == tString) && (((symbolTablePtr)tmp.addr2)->content.type == tString)){
+							 if (strcmp(((symbolTablePtr)tmp.addr1)->content.value.s, ((symbolTablePtr)tmp.addr2)->content.value.s) == 0){
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								 printf("E: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+								 break;
+							 }
+							 else{
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								 printf("E: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+								 break;
+							 }
+						 }
+
+						 if ((((symbolTablePtr)tmp.addr1)->content.type == tInt) && (((symbolTablePtr)tmp.addr2)->content.type == tInt)){
+							 if (((symbolTablePtr)tmp.addr1)->content.value.i == ((symbolTablePtr)tmp.addr2)->content.value.i){
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								 printf("E: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+								 break;
+							 }
+							 else{
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								 printf("E: %d\n", ((symbolTablePtr)tmp.addr3)->content.value.b);
+								 break;
+							 }
+						 }
+
+						 if ((((symbolTablePtr)tmp.addr1)->content.type == tBool) && (((symbolTablePtr)tmp.addr2)->content.type == tBool)){
+							 if (((symbolTablePtr)tmp.addr1)->content.value.r == ((symbolTablePtr)tmp.addr2)->content.value.r){
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								 break;
+							 }
+							 else{
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								 break;
+							 }
+						 }
+
+						 if ((((symbolTablePtr)tmp.addr1)->content.type == tReal) && (((symbolTablePtr)tmp.addr2)->content.type == tReal)){
+							 if (((symbolTablePtr)tmp.addr1)->content.value.r == ((symbolTablePtr)tmp.addr2)->content.value.r){
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = true;
+								 break;
+							 }
+							 else{
+								 ((symbolTablePtr)tmp.addr3)->content.value.b = false;
+								 break;
+							 }
+						 }
+						 return SEM_ERR2;
+						 break;
+		}
+
+		case I_READLN: {
+						   if (((symbolTablePtr)tmp.addr3)->content.type == tInt){
+							   scanf("%d", &((symbolTablePtr)tmp.addr3)->content.value.i);
+							   if (((symbolTablePtr)tmp.addr3)->content.value.i < 0)
+								   return RUN_ERR;
+							   else
+								   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;
+							   break;
+						   }
+						   if (((symbolTablePtr)tmp.addr3)->content.type == tReal){
+							   scanf("%lf", &((symbolTablePtr)tmp.addr3)->content.value.r);
+							   if (((symbolTablePtr)tmp.addr3)->content.value.r < 0)
+								   return RUN_ERR;
+							   else
+								   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;
+							   break;
+						   }
+						   if (((symbolTablePtr)tmp.addr3)->content.type == tString){
+							   ((symbolTablePtr)tmp.addr3)->content.value.s = gMalloc(sizeof (50));
+							   scanf("%s", &((symbolTablePtr)tmp.addr3)->content.value.s);
+							   if (((symbolTablePtr)tmp.addr3)->content.value.s < 0)
+								   return RUN_ERR;
+							   else
+								   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;
+							   break;
+						   }
+		break;
+		}
+		case I_ASSIGN: {
+						   if ((((symbolTablePtr)tmp.addr1)->content.isDefined) != true) 
+							   return RUN_ERR2;
+						   if (((symbolTablePtr)tmp.addr1)->content.type == tInt){
+							   ((symbolTablePtr)tmp.addr3)->content.value.i = ((symbolTablePtr)tmp.addr1)->content.value.i;
+							   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;						   
+						   }
+						   if (((symbolTablePtr)tmp.addr1)->content.type == tReal){
+							   ((symbolTablePtr)tmp.addr3)->content.value.r = ((symbolTablePtr)tmp.addr1)->content.value.r;
+							   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;
+						   }
+						   if (((symbolTablePtr)tmp.addr1)->content.type == tString){
+							   ((symbolTablePtr)tmp.addr3)->content.value.s = ((symbolTablePtr)tmp.addr1)->content.value.s;
+							   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;
+						   }
+						   if (((symbolTablePtr)tmp.addr1)->content.type == tBool){
+							   ((symbolTablePtr)tmp.addr3)->content.value.b = ((symbolTablePtr)tmp.addr1)->content.value.b;
+							   ((symbolTablePtr)tmp.addr3)->content.isDefined = true;
+						   }
+						   break;
+
+		}
+		case I_IF: {
+					   if (((symbolTablePtr)tmp.addr1)->content.isDefined == false)
+						   return RUN_ERR2;
+					   if (((symbolTablePtr)tmp.addr1)->content.value.b == true)
+						   break;
+					   else{
+							    instListSkip(&instlist);
+								instListSucc(&instlist);
+					   }
+						   break;
+
+			}
+
+			case I_ELSE:{
+							return INT_ERR;
+							break;
+			}
+
+			case I_END:{
+						   if (instlist.Active->ptr->instruction.type == I_ELSE)
+							   instListSkip(&instlist);
+						   break;
+			}
+		default:{
+					break;
+		}
+/*					case I_LENGTH:
+					length(char *str);
+					break
+
+					case I_SORT:
+					sort(char * s);
+					break;
+
+					case I_COPY:
+					copy(char* str, int position, int count);
+					break;
+
+					case I_FIND:
+					find(char *s, char *search)
+					break;
+					*/
+			
+		}
+
+
 	}
-
-	tmp->data = data;
-	tmp->next = NULL;
-
-	if (ptr->First == NULL)
-		ptr->First = tmp;
-	else
-		ptr->Last->next = tmp;
-
-	ptr->Last = tmp;
 }
-sVariable *frameSearch(sFrame *ptr, char* name){
-	sFrameItem *item = ptr->First;
-	while(item != NULL){
-		if(strcmp(item->data.name,name)==0)
-			return &(item->data);
-		item = item->next;
-	}
-	return NULL;
-}
-void frameDisposal(sFrame *ptr){
-	sFrameItem *item = ptr->First;
-	sFrameItem *tmp;
-	while(item != NULL){
-		tmp = item->next;
-		free(item);
-		item = tmp;
-	}
-}
-
-sVariable createVar(sValue val, sType type, char* name){
-	sVariable item;
-	item.val = val;
-	item.type = type;
-	item.name = name;
-	return item;
-}
-
-
-
-
-
-
-// int interpr(tInst *T, tInstList *instrlist){
-// 	instrListFirst(instrlist);
-// 	tInstr *L;
-
-// 	while (1)
-// 	{
-
-
-// 		switch (L)
-// 		{
-// 		case I_STOP:
-// 			return 0;
-// 			break;
-
-// 		case I_ADD:
-// 			((symbol*)L->addr1)->value++;
-// 			break;
-
-// 		case I_SUB:
-// 			((symbol*)L->addr1)->value--;
-// 			break;
-
-// 		case I_MUL:
-// 			//kontrola typu
-
-// 			((symbol*)L->addr3)->value = (((symbol*)L->addr1)->value) * (((symbol*)L->addr2)->value);
-// 			break;
-
-// 		case I_DIV:
-// 			//kontrola typu
-
-// 			((symbol*)L->addr3)->value = (((symbol*)L->addr1)->value) / (((symbol*)L->addr2)->value);
-// 			break;
-
-// 		case I_CONC:
-// 			((symbol*)L->addr3)->value = strcat(((symbol*)L->addr1)->value, ((symbol*)L->addr2)->value);
-// 			break;
-
-// 		case I_LESSER:
-// 			if ((((symbol*)L->addr1)->value) < (((symbol*)L->addr2)->value)))
-// 				((symbol*)L->addr3)->value = TRUE;
-// 			else
-// 				((symbol*)L->addr3)->value = FALSE;
-// 			break;
-
-// 		case I_GREATER:
-// 			if ((((symbol*)L->addr1)->value) > (((symbol*)L->addr2)->value)))
-// 				((symbol*)L->addr3)->value = TRUE;
-// 			else
-// 				((symbol*)L->addr3)->value = FALSE;
-// 			break;
-
-// 		case I_LOE:
-// 			if ((((symbol*)L->addr1)->value) >= (((symbol*)L->addr2)->value)))
-// 				((symbol*)L->addr3)->value = TRUE;
-// 			else
-// 				((symbol*)L->addr3)->value = FALSE;
-// 			break;
-
-// 		case I_GOE:
-// 			if ((((symbol*)L->addr1)->value) <= (((symbol*)L->addr2)->value)))
-// 				((symbol*)L->addr3)->value = TRUE;
-// 			else 
-// 				((symbol*)L->addr3)->value = FALSE;
-// 			break;
-
-// 		case I_NOTEQUAL:
-// 			if ((((symbol*)L->addr1)->value) != (((symbol*)L->addr2)->value))
-// 				((symbol*)L->addr3)->value = TRUE;
-// 			else
-// 				((symbol*)L->addr3)->value = FALSE;
-// 			break;
-
-// 		case I_EQUAL:
-// 			if ((((symbol*)L->addr1)->value) == (((symbol*)L->addr2)->value))
-// 				((symbol*)L->addr3)->value = TRUE;
-// 			else
-// 				((symbol*)L->addr3)->value = FALSE;
-// 			break;
-
-// 		case I_LENGTH:
-// 			length(instrlist);
-// 			break
-
-// 		case I_SORT:
-// 			break;
-
-// 		case I_COPY:
-// 			copy(instrlist, L->addr ? , int count);
-// 			break;
-
-// 		case I_FIND:
-// 			instListGoto(instrlist, L->addr3);
-// 			break;
-		
-
-
-
-
-
-
-// 		}
-
-// 	L = instListSucc();
-// 	}
-	
-// }
-
-
+ 

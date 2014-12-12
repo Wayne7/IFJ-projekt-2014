@@ -73,7 +73,7 @@ typedef struct{
 
 extern int result;
 
-extern tInstList inst_list_global;
+extern tInstList *inst_list_global;
 
 int precedence(tToken *token,symbolTablePtr *symbolTable);
 

@@ -416,6 +416,10 @@ tToken tGetToken(){
 
 			}
 
+			default:{
+				break;
+			}
+
 		}
 	}
 }
