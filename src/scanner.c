@@ -1,3 +1,14 @@
+/*
+* Soubor:  scanner.c
+* Datum:   2014/12/14
+* Autori:  Lukas Pelanek, xpelan03@stud.fit.vutbr.cz
+*		   Hana Prostrednikova, xprost01@stud.fit.vutbr.cz
+*		   Zuzana Skalnikova, xskaln04@stud.fit.vutbr.cz
+*		   Vitezslav Skrivanek, xskriv11@stud.fit.vutbr.cz
+* Projekt: Interpret jazyka IFJ14, projekt do predmetu IFJ
+* Popis:   Program nacte zdrojovy soubor zapsany v jazyce IFJ14 a interpretuje jej.
+*/
+
 #include "scanner.h"
 #include "garbage_collector.h"
 

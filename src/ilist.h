@@ -32,9 +32,13 @@ typedef enum{
 
 	I_ASSIGN,
 
-	I_IF,
-	I_ELSE,
-	I_END
+	I_WHILE,
+	I_LABEL,
+	I_GOTO,
+	I_IFGOTO,
+
+	I_CALL,
+
 
 	// a tak dale
 }tInstType;

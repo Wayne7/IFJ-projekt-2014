@@ -1,59 +1,43 @@
-#define _CRTDBG_MAP_ALLOC
-
-#include "strings.h"
+/*
+* Soubor:  main.c
+* Datum:   2014/12/14
+* Autori:  Lukas Pelanek, xpelan03@stud.fit.vutbr.cz
+*		   Hana Prostrednikova, xprost01@stud.fit.vutbr.cz
+*		   Zuzana Skalnikova, xskaln04@stud.fit.vutbr.cz
+*		   Vitezslav Skrivanek, xskriv11@stud.fit.vutbr.cz
+* Projekt: Interpret jazyka IFJ14, projekt do predmetu IFJ
+* Popis:   Program nacte zdrojovy soubor zapsany v jazyce IFJ14 a interpretuje jej.
+*/
 #include "scanner.h"
 #include "garbage_collector.h"
 #include "parser.h"
 #include "ial.h"
 #include "precedence.h"
 #include "ilist.h"
-
 #include <stdlib.h>
-#include <crtdbg.h>
 
 	FILE *file;		// soubor globalne
-
-
-
 
 int main(int argc, char** argv){
 
 	int result = SYNTAX_OK;
-	
+
 	if (argc != 2){
 		return 99;
 	}
-	
+
 
 	if ((file = fopen(argv[1], "r")) == NULL){
-		printf("Could not open file!\n");
-		return 99;
+		return INT_ERR;
 	}
 
-		symbolTablePtr symbolTable;
-		BTInit(&symbolTable);
+    symbolTablePtr symbolTable;
+    BTInit(&symbolTable);
 
-		result = parse(&symbolTable);
-
-		if (result != SYNTAX_OK){
-			printf("%d\n", result);
-			printf("Error!\n");
-		}
-		else
-			printf("OK!\n");
-
-		symbolTablePtr test = BTSearch(&symbolTable, "doge");
-
-		printf("------------LOCAL----------------\n");
-		BTPrint(&test->content.symbolTable);
-		printf("-------------GLOBAL---------------\n");
-		BTPrint(&symbolTable);
-		printf("----------------------------\n");
-
+    result = parse(&symbolTable);
 
 	gFree();
-	printf("memory leaks: %d\n", _CrtDumpMemoryLeaks());
-	
+
 	fclose(file);
 
 	return result;

@@ -17,4 +17,7 @@ int varType(tToken *token, symbolTablePtr *symbolTable, symbol *s);
 int params(tToken *token, symbolTablePtr *symbolTable, symbol *sym, symbolTablePtr test);
 int defFunction(tToken *token, symbolTablePtr *symbolTable);
 
+
+
+
 #endif

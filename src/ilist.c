@@ -1,15 +1,15 @@
-#include "ilist.h"
+/*
+* Soubor:  ilist.c
+* Datum:   2014/12/14
+* Autori:  Lukas Pelanek, xpelan03@stud.fit.vutbr.cz
+*		   Hana Prostrednikova, xprost01@stud.fit.vutbr.cz
+*		   Zuzana Skalnikova, xskaln04@stud.fit.vutbr.cz
+*		   Vitezslav Skrivanek, xskriv11@stud.fit.vutbr.cz
+* Projekt: Interpret jazyka IFJ14, projekt do predmetu IFJ
+* Popis:   Program nacte zdrojovy soubor zapsany v jazyce IFJ14 a interpretuje jej.
+*/
 
-void instListSkip(tInstList *list){
-	instListSucc(list);
-	tItem item = *(list->Active);
-	while (item.instruction.type != I_END){
-		instListSucc(list);
-		item = *(list->Active);
-		if (item.instruction.type == I_IF)
-			instListSkip(list);
-	}
-}
+#include "ilist.h"
 
 
 void instListInit(tInstList *list){     //inicializace seznamu
@@ -44,35 +44,6 @@ void instListInsert(tInstList *list, tInst inst){   // vklada prvek a konec sezn
 	}
 	list->Last = tmp;
 }
-
-void instListFirst (tInstList *list){       //nastavi aktivitu na prvni instrukci
-    list->Active = list->First;
-}
-
-void instListGoto (tInstList *list, void *gotoInstr){ //nastavi aktivitu na instrukci podle zadaneho ukazatele
-    list->Active = (tItem*) gotoInstr;
-}
-
-void *instLastPtr (tInstList *list){     //vraci ukazatel na posledni instrukci
-    return (void*) list->Last;
-}
-
-tInst *instCopy (tInstList *list){        //vraci aktivni instrukci
-	if (list->Active == NULL){
-		return NULL;
-	}
-	else{
-		return &(list->Active->instruction);
-	}
-}
-
-void instListPrint(tInstList *list){
-	tItem *tmp = list->First;
-	while(tmp != NULL){
-		printf("%d - %p , %p , %p\n",tmp->instruction.type,tmp->instruction.addr1,tmp->instruction.addr2,tmp->instruction.addr3 );
-		tmp = tmp->ptr;}
-}
-
 
 tInst createInst(tInstType type, void* addr1, void* addr2, void* addr3){
 	tInst item;

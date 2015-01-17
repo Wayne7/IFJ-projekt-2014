@@ -12,6 +12,7 @@
 #define ASSIGN 0
 #define CONDITION 1
 #define WHILE 2
+#define FUNC 3
 
 /* Priority precedencni tabulky */
 typedef enum {

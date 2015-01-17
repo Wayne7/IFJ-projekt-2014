@@ -1,5 +1,16 @@
-#include "precedence.h"
+/*
+* Soubor:  precedence.c
+* Datum:   2014/12/14
+* Autori:  Lukas Pelanek, xpelan03@stud.fit.vutbr.cz
+*		   Hana Prostrednikova, xprost01@stud.fit.vutbr.cz
+*		   Zuzana Skalnikova, xskaln04@stud.fit.vutbr.cz
+*		   Vitezslav Skrivanek, xskriv11@stud.fit.vutbr.cz
+* Projekt: Interpret jazyka IFJ14, projekt do predmetu IFJ
+* Popis:   Program nacte zdrojovy soubor zapsany v jazyce IFJ14 a interpretuje jej.
+*/
 
+#include "precedence.h"
+stack s1;
 tableEntries entry = nula;
 int varcount = 0;
 symbolTablePtr ans=NULL;
@@ -55,25 +66,6 @@ void freeStack(stack *ptr){
 	}
 }
 
-void printStack(stack *ptr){
-	int i = 0;
-	stack s;
-	stackInit(&s);
-	while(ptr->top != NULL){
-		push(&s,top(ptr));
-		pop(ptr);
-	}
-	printf("--------zasobnik-------\n");
-	while(s.top != NULL){
-		push(ptr,top(&s));
-		printf("%d: %d\n",i,top(&s));
-		pop(&s);
-		i++;
-	}
-	printf("----------------------\n");
-	
-}
-
 void stackInit_N(name_stack *ptr){
 	ptr->top = NULL;
 }
@@ -120,31 +112,6 @@ void freeStack_N(name_stack *ptr){
 		free(tmp);
 	}
 }
-
-void printStack_N(name_stack *ptr){
-	printf("%p\n", ans);
-	if(!ptr->top)
-		return;
-	int i = 0;
-	name_stack s;
-	stackInit_N(&s);
-	while(ptr->top != NULL){
-		push_N(&s,top_N(ptr));
-		pop_N(ptr);
-	}
-	printf("--------jmena--------\n");
-	while(s.top != NULL){
-		push_N(ptr,top_N(&s));
-		printf("%d: %s\n",i,top_N(&s));
-		pop_N(&s);
-		i++;
-	}
-	printf("---------------------\n");
-	
-}
-
-
-
 
 const tablePriorities precedenceTable[14][14] = {
 
@@ -233,9 +200,10 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		item->type = tInt;
 		item->isDefined = true;
 		item->value.i = strtol(token->content,NULL,0);
-		result = BTInsert(symbolTable,item->key, *item);
+		if (BTInsert(symbolTable, item->key, *item) != 0){
+			result = SEM_ERR;
+		}
 		ans = BTSearch(symbolTable, item->key);
-		//printf("identifikátor %d\n", ans->content.value.i);
 		push_N(&s2, item->key);
 		return id;
 	}
@@ -247,7 +215,9 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		item->type = tReal;
 		item->isDefined = true;
 		item->value.r = strtod(token->content,NULL);
-		result = BTInsert(symbolTable,item->key, *item);
+		if (BTInsert(symbolTable, item->key, *item) != 0){
+			result = SEM_ERR;
+		}
 		ans = BTSearch(symbolTable, item->key);
 		push_N(&s2, item->key);
 		return id;
@@ -260,18 +230,26 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		item->type = tString;
 		item->isDefined = true;
 		item->value.s = token->content;
-		result = BTInsert(symbolTable,item->key, *item);
+		if (BTInsert(symbolTable, item->key, *item) != 0){
+			result = SEM_ERR;
+		}
 		ans = BTSearch(symbolTable, item->key);
 		push_N(&s2, item->key);
 		return id;
 	}
 
 	case T_IDENTIFICATOR : {
+	  if (top(&s1) == id){
+		  result = SYNTAX_ERR;
+	      return error;
+	 }
+
 		ans = BTSearch(symbolTable,token->content);
 		if(ans==NULL){
 			result = SEM_ERR;
 			return error;
 		}
+
 		if (ans->content.isFunction){
 			result = SEM_ERR2;
 			return error;
@@ -281,9 +259,13 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 		
 	}
 	case T_KEYWORD:{
-		if(condition == 1 && (strcmp(token->content,"then")==0))
+		if(condition == 1 && (strcmp(token->content,"then")== 0))
 			return dolar;
-		if(condition == 2 && (strcmp(token->content,"do")==0))
+		if(condition == 2 && (strcmp(token->content,"do")== 0))
+			return dolar;
+		if (condition == 3 && (strcmp(token->content, "end") == 0))
+			return dolar;
+		if (condition == 0 && (strcmp(token->content, "end") == 0))
 			return dolar;
 
 		if (!strcmp(token->content, "true\0") || !strcmp(token->content, "false\0")){
@@ -298,7 +280,9 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 			else{
 				item->value.b = false;
 			}
-			result = BTInsert(symbolTable, item->key, *item);
+			if (BTInsert(symbolTable, item->key, *item) != 0){
+				result = SEM_ERR;
+			}
 			ans = BTSearch(symbolTable, item->key);
 			push_N(&s2, item->key);
 			return id;
@@ -309,7 +293,6 @@ tableEntries getIndex(tToken *token,symbolTablePtr *symbolTable){
 
 
 	default:{
-		printf("Unexcepted symbol\n");
 		return error;
 	}
 
@@ -341,7 +324,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("mul\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -352,7 +334,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 							if(pom2->content.type == tInt){
 								polozka->type = tInt;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_MUL, pom2, pom1, (void*) ans);
 								break;
@@ -361,7 +344,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 							if(pom2->content.type == tReal){
 								polozka->type = tReal;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_MUL, pom2, pom1, (void*) ans);
 								break;
@@ -375,7 +359,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						case tReal:{
 							polozka->type = tReal;
 							polozka->isDefined = true;
-							result = BTInsert(symbolTable,polozka->key, *polozka);
+							if (BTInsert(symbolTable, polozka->key, *polozka))
+								result = SEM_ERR;
 						
 							if(pom2->content.type == tInt){
 								ans = BTSearch(symbolTable,polozka->key);
@@ -423,14 +408,14 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("divide\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
 					sprintf(polozka->key,"#_%d",varcount++);
 					polozka->type = tReal;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 
 					switch(pom1->content.type){
@@ -498,7 +483,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("plus\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -510,7 +494,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 							if(pom2->content.type == tInt){
 								polozka->type = tInt;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_ADD, pom2, pom1,(void*) ans);
 								break;
@@ -519,7 +504,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 							if(pom2->content.type == tReal){
 								polozka->type = tReal;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_ADD, pom2, pom1,(void*) ans);
 								break;
@@ -533,7 +519,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						case tReal:{
 							polozka->type = tReal;
 							polozka->isDefined = true;
-							result = BTInsert(symbolTable,polozka->key, *polozka);
+							if (BTInsert(symbolTable, polozka->key, *polozka))
+								result = SEM_ERR;
 							
 							if(pom2->content.type == tReal){
 								ans = BTSearch(symbolTable,polozka->key);
@@ -554,10 +541,10 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 						case tString:{
 							if(pom2->content.type == tString){		// POLOZKA UPRAVENA !!!!!
-								polozka->value.s = gMalloc(strlen(pom1->content.value.s) + strlen(pom1->content.value.s) + 1);
 								polozka->type = tString;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_CONC, pom2, pom1,(void*) ans);
 								break;
@@ -597,7 +584,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("minus\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -608,7 +594,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 							if(pom2->content.type == tInt){
 								polozka->type = tInt;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_SUB, pom2, pom1, (void*) ans);
 								break;
@@ -617,7 +604,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 							if(pom2->content.type == tReal){
 								polozka->type = tReal;
 								polozka->isDefined = true;
-								result = BTInsert(symbolTable,polozka->key, *polozka);
+								if (BTInsert(symbolTable, polozka->key, *polozka))
+									result = SEM_ERR;
 								ans = BTSearch(symbolTable,polozka->key);
 								inst = createInst(I_SUB, pom2, pom1, (void*) ans);
 								break;
@@ -631,7 +619,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 						case tReal:{
 							polozka->type = tReal;
 
-							result = BTInsert(symbolTable,polozka->key, *polozka);
+							if (BTInsert(symbolTable, polozka->key, *polozka))
+								result = SEM_ERR;
 						
 							if(pom2->content.type == tInt){
 								ans = BTSearch(symbolTable,polozka->key);
@@ -678,7 +667,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("lesser\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -689,7 +677,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}
 					polozka->type = tBool;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 					inst = createInst(I_LESSER, pom2, pom1, (void*) ans);
 					pop_N(n_stack);
@@ -710,7 +699,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("greater\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -721,7 +709,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}
 					polozka->type = tBool;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 					inst = createInst(I_GREATER, pom2, pom1, (void*) ans);
 					pop_N(n_stack);
@@ -742,7 +731,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("loe\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -753,7 +741,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}
 					polozka->type = tBool;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 					inst = createInst(I_LOE, pom2, pom1,(void*) ans);
 					pop_N(n_stack);
@@ -774,7 +763,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("goe\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -785,7 +773,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}
 					polozka->type = tBool;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 					inst = createInst(I_GOE, pom2, pom1,(void*) ans);
 					pop_N(n_stack);
@@ -806,7 +795,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("equal\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -817,7 +805,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					}
 					polozka->type = tBool;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 					inst = createInst(I_EQUAL, pom2, pom1,(void*) ans);
 					pop_N(n_stack);
@@ -840,7 +829,6 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					pop(stack);
 					item = top(stack);
 					push(stack, nonterminal);
-					//printf("notequal\n");
 					pom1 = BTSearch(symbolTable,top_N(n_stack));
 					pop_N(n_stack);
 					pom2 = BTSearch(symbolTable,top_N(n_stack));
@@ -851,7 +839,8 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 					sprintf(polozka->key,"#_%d",varcount++);
 					polozka->type = tBool;
 					polozka->isDefined = true;
-					result = BTInsert(symbolTable,polozka->key, *polozka);
+					if (BTInsert(symbolTable, polozka->key, *polozka))
+						result = SEM_ERR;
 					ans = BTSearch(symbolTable,polozka->key);
 					inst = createInst(I_NOTEQUAL, pom2, pom1, (void*) ans);
 					pop_N(n_stack);
@@ -923,8 +912,7 @@ tableEntries reduction(stack *stack, name_stack *n_stack, symbolTablePtr *symbol
 
 		
 int precedence(tToken *token, symbolTablePtr *symbolTable){
-	stack s1;			// zasobnik pro ukladani terminalu a neterminalu
-	//sValue asdf;
+				// zasobnik pro ukladani terminalu a neterminalu
 
 	tableEntries row;		// symbol na zasobniku (determinál)
 	tableEntries col;		// symbol na vstupu
@@ -935,19 +923,15 @@ int precedence(tToken *token, symbolTablePtr *symbolTable){
 	row = dolar;
 	push(&s1, row);
 
-	//conListInit(&con_list);
 
 	do{
-		//conListSearch(&con_list,"#_2",&asdf);
 		col = getIndex(token, symbolTable);
-		//printf("%d",result);
 		if (col == error){
 			freeStack(&s1);										   	
 			freeStack_N(&s2);
 			return result;
 		}
 
-		//printf("***********************\n");
 
 
 		switch (precedenceTable[row][col]){
@@ -959,14 +943,8 @@ int precedence(tToken *token, symbolTablePtr *symbolTable){
 		}
 
 		case G:{    						// Greater --> redukce
-					//printf("---------redukce---------\n");
-					//printf("před\t%d %d\n",row, col );
-					//printStack(&s1);
 					row = reduction(&s1, &s2, symbolTable);
-					//printf("po:\t%d %d\n",row, col );
-					//printStack(&s1);
-					if(row == error){
-						//printf("chyba!\n");	
+					if(row == error){	
 						freeStack(&s1);
 						freeStack_N(&s2);
 						return result;
@@ -974,37 +952,26 @@ int precedence(tToken *token, symbolTablePtr *symbolTable){
 					break;
 		}
 		case L:{							// Lesser --> < push 
-					//printf("před:\t%d %d\n",row, col );
-					//printStack(&s1);
-
+					
 					if(top(&s1) == nonterminal){
 
 						if(col >= 4 && col <= 9){
-							//printf("L if %d\n",col);
 							push(&s1, col);
 							row = col;
-							//printf("po:\t%d %d\n",row, col );
-							//printStack(&s1);
 						}
 						else{
-							//printf("L else if\n");
 							pop(&s1);
 					   		push(&s1, slesser);
 					   		push(&s1, nonterminal);
 					   		push(&s1, col);
 					   		row = col;
-					   		//printf("po:\t%d %d\n",row, col );<
-							//printStack(&s1);
 				   		}
 					}
 
 					else{
-						//printf("L else\n");
 					 	push(&s1, slesser);
 						push(&s1, col);
 						row = col;
-						//printf("po:\t%d %d\n",row, col );
-						//printStack(&s1);
 					}
 					*token = tGetToken();
 					if (token->state == T_ERR){
@@ -1027,18 +994,7 @@ int precedence(tToken *token, symbolTablePtr *symbolTable){
 				}
 			}
 		}
-	//printf("\n-----\n\n" );
-	//printStack_N(&s2);
-	//printf("\n-----\n\n" );
 	} while (row != dolar || col != dolar);
-	//printf("jsme venku! %d\n",result);
-	//conListSearch(&con_list,"#_2",&asdf);
-	//printf("%d\n",asdf.i );
-	//conListPrint(&con_list);
-	//instListPrint(inst_list_global);
-	//BTPrint(symbolTable);
-	//printf("%p\n", ans );
-
 
 	freeStack(&s1);
 	freeStack_N(&s2);

@@ -39,6 +39,7 @@ typedef struct params{
 	struct params *ptr;
 }*sParams;
 
+
 typedef struct Symbol{
 	char *key;
 	sType type;

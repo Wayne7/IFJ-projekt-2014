@@ -1,3 +1,14 @@
+/*
+* Soubor:  ial.c
+* Datum:   2014/12/14
+* Autori:  Lukas Pelanek, xpelan03@stud.fit.vutbr.cz
+*		   Hana Prostrednikova, xprost01@stud.fit.vutbr.cz
+*		   Zuzana Skalnikova, xskaln04@stud.fit.vutbr.cz
+*		   Vitezslav Skrivanek, xskriv11@stud.fit.vutbr.cz
+* Projekt: Interpret jazyka IFJ14, projekt do predmetu IFJ
+* Popis:   Program nacte zdrojovy soubor zapsany v jazyce IFJ14 a interpretuje jej.
+*/
+
 #include "ial.h"
 #include <string.h>
 
@@ -8,7 +19,7 @@
 
 int BTInsert(symbolTablePtr *root, char *key, symbol s){
 
-	if(function){	
+	if(function){
 		if(BTSearch_(&(func->content.symbolTable),key) != NULL)
 			return BT_ERR;
 		return BTInsert_(&(func->content.symbolTable), key, s);
@@ -29,7 +40,6 @@ int BTInsert_(symbolTablePtr *root, char *key, symbol s){
 		if ((tmp = gMalloc(sizeof(struct BTree))) == NULL){
 			return BT_ERR;
 		}
-		printf("\n%p\n",tmp );
 		tmp->key = key;
 		tmp->content = s;
 		tmp->LPtr = NULL;
@@ -49,7 +59,6 @@ int BTInsert_(symbolTablePtr *root, char *key, symbol s){
 			return BTInsert_(&(*root)->RPtr, key, s);
 		}
 		if (cmp == 0){
-			printf("nevim\n");
 			return BT_ERR;							// vratim error, protoze polozka jiz v tabulce je
 		}
 	}
@@ -76,10 +85,11 @@ symbolTablePtr BTSearch_(symbolTablePtr *root, char *key){
 	tmp = *root;
 
 	if (tmp == NULL){
-		return NULL;			
+		return NULL;
 	}
 
 	int cmp;
+
 
 	cmp = strcmp(tmp->key, key);
 
@@ -102,20 +112,30 @@ void BTInit(symbolTablePtr *root){
 
 int length(char *str)
 {
+	if (str == NULL)
+		return 0;
 	return (strlen(str));         //funkce vraci delku zadaneho retezce
 }
 
 char *copy(char* str, int position, int count)
 {
-	char *copy = gMalloc(sizeof (char));
+	if (position < 1){
+		position = 1;
+	}
+
+	char *copy = gMalloc(sizeof(char) * (count + 1));
 	int index = 0;
 	while (count != 0)
 	{
 		copy[index] = str[position - 1];
+		if (copy[index] == '\0'){
+			return copy;
+		}
 		index++;
 		position++;
 		count--;
 	}
+	copy[index] = '\0';
 	return copy;
 }
 
@@ -135,53 +155,15 @@ void prefix(char* s, int search_size, int *arr){
 		}
 	}
 }
-void BTPrint(symbolTablePtr *root){
-	if (*root == NULL){
-		return;
-	}
-	symbolTablePtr tmp = (*root);
-	switch (tmp->content.type){
-	case tInt:{
-				  printf("%s int: %d\n", (*root)->key, tmp->content.value.i);
-				  BTPrint(&(*root)->LPtr);
-				  break;
-	}
-	case tReal:{
-				   printf("%s real: %p\n", (*root)->key, tmp);
-				   BTPrint(&(*root)->LPtr);
-				   break;
-	}
-	case tString:{
-					 printf("%s string: %p\n", (*root)->key, tmp);
-					 BTPrint(&(*root)->LPtr);
-					 break;
-	}
-	case tBool:{
-				   printf("%s bool: %p\n", (*root)->key, tmp);
-				   BTPrint(&(*root)->LPtr);
-				   break;
-	}
-	}
-	BTPrint(&(*root)->RPtr);
 
-}
-
-
-/*int find(char *s, char *search){        //funkce vyhleda prvni vyskyt podretezce v retezci a vrati jeho pozici
+int find(char *s, char *search){        //funkce vyhleda prvni vyskyt podretezce v retezci a vrati jeho pozici
 	int s_size = strlen(s);
 	int search_size = strlen(search);
 	if (search_size > s_size)            //pokud je hledany podretezec vetsi nez retezec vrati chybu
-		return -1;
+		return 0;
 	int SizeOfArray = (search_size + 1);
 	int arr[SizeOfArray];
 	prefix(search, search_size, &arr[0]);
-
-	for (int k = 0; k<search_size; k++)
-	{
-		printf("%d|", arr[k]);
-	}
-	printf("\n");
-
 
 	int j = 0;
 	int i = 0;
@@ -207,7 +189,7 @@ void BTPrint(symbolTablePtr *root){
 		else i = arr[i];
 
 	}
-	return -1;
+	return 0;
 }
 
 
@@ -256,4 +238,4 @@ void MergeSort(char *array, int left, int right){
 char* sort(char * s) {
 	MergeSort(s, 0, strlen(s) - 1);
 	return s;
-}*/
+}
