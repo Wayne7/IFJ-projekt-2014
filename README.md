@@ -1,4 +1,7 @@
-Dream team
+Projekt do predmetu IFJ
+VUT FIT
 ==========
+Implementace interpretu jazyka IFJ14, ktery je podmnozinou jazyka Pascal.
 
-Nuff said
+Bodove hodnoceni projektu: 16/20
+Nefunguje rekurzivni volani funkci
