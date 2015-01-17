@@ -1,9 +1,0 @@
-Sem pištì zmìny, které jste udìlali a je v tom pøehled :)
-
---------------------------------------------------------------
-2014-10-18 Lukas
-Implementován garbage collector. Pouívejte pro alokaci pamìti "gAlloc" nebo "gReAlloc". Alokovaná pamì se ukládá do lineárního seznamu a na konci programu se všechna pamì uvolní.
---------------------------------------------------------------
-
-
-
